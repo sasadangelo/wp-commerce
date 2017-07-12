@@ -1,0 +1,24 @@
+/**
+ * All of the CSS for your admin-specific functionality should be
+ * included in this file.
+ */
+
+.sidebar-turbo-sidebar {
+  border-top: 2px solid #F29D3A;
+  border-radius: 5px 5px 0 0;
+}
+
+p#wop-shortcode {
+	font-family: courier, monospace, sans-serif;
+}
+
+i.mce-i-icon {
+    font: 400 20px/1 dashicons;
+    padding: 0;
+    vertical-align: top;
+    speak: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin-left: -2px;
+    padding-right: 2px
+}
