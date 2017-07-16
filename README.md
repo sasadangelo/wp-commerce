@@ -25,4 +25,17 @@ All these stuff could take months to accomplish and if you are not an expert and
 
 ## The Solution
 
+Create a ready made ecommerce website with Wordpress and Woocommerce where lot of customization have already been done:
+
+* Added default Storefront theme for Woocommerce where you can add your own child theme;
+* Already created main pages: Contact, About US, Checkout, Basket and Shop; and configured with all the bells and whistles. If you do not like them you can change them like a normal Wordpress + Woocommerce website.
+* Already optimized for search engine with Yoast Wordpress SEO already configured for best results.
+* Already optimized for speed with W3TCache already configured for max speed.
+* Anti spam feature already present with Antispam Bee plugin already configured for best results.
+* E-commerce ready with WooCommerce already configured for italian shops.
+* Ready for your Privacy Policy with Cookie Law Info plugin.
+* Contact page powered by Contact Form 7 + WP Google Maps + Better Font Awesome plugins.
+
+## How to install WP-Commerce on your Mac
+
 TODO
