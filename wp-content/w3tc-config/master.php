@@ -640,11 +640,14 @@
     "common.instance_id": 1062254250,
     "common.force_master": true,
     "extensions.active": {
-        "newrelic": "w3-total-cache\/Extension_NewRelic_Plugin.php",
         "fragmentcache": "w3-total-cache\/Extension_FragmentCache_Plugin.php",
-        "swarmify": "w3-total-cache\/Extension_Swarmify_Plugin.php"
+        "newrelic": "w3-total-cache\/Extension_NewRelic_Plugin.php",
+        "swarmify": "w3-total-cache\/Extension_Swarmify_Plugin.php",
+        "wordpress-seo": "w3-total-cache\/Extension_WordPressSeo_Plugin.php"
     },
-    "extensions.active_frontend": [],
+    "extensions.active_frontend": {
+        "wordpress-seo": "*"
+    },
     "plugin.license_key": "",
     "plugin.type": ""
 }

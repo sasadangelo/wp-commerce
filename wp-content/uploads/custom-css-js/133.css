@@ -1,0 +1,19 @@
+<!-- start Simple Custom CSS and JS -->
+<style type="text/css">
+#main.site-main {
+    padding-top: 0;
+}
+
+.woocommerce-breadcrumb {
+    margin-bottom: 0;
+}
+
+blockquote + h2, blockquote + h3, blockquote + h4, blockquote + header h2, form + h2, form + h3, form + h4, form + header h2, ol + h2, ol + h3, ol + h4, ol + header h2, p + h2, p + h3, p + h4, p + header h2, table + h2, table + h3, table + h4, table + header h2, ul + h2, ul + h3, ul + h4, ul + header h2 {
+    margin-top: 0;
+}
+
+.beta + h3, h2 + h3 {
+    border-top: none;
+    padding-top: 0;
+}</style>
+<!-- end Simple Custom CSS and JS -->
