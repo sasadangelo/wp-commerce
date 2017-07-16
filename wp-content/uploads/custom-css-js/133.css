@@ -15,5 +15,9 @@ blockquote + h2, blockquote + h3, blockquote + h4, blockquote + header h2, form 
 .beta + h3, h2 + h3 {
     border-top: none;
     padding-top: 0;
+}
+
+.hentry {
+    margin: 0;
 }</style>
 <!-- end Simple Custom CSS and JS -->
