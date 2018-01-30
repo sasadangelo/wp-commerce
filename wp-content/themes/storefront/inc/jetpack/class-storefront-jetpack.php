@@ -38,7 +38,6 @@ if ( ! class_exists( 'Storefront_Jetpack' ) ) :
 			add_theme_support( 'infinite-scroll', apply_filters( 'storefront_jetpack_infinite_scroll_args', array(
 				'container'      => 'main',
 				'footer'         => 'page',
-				'type'           => 'click',
 				'posts_per_page' => '12',
 				'render'         => array( $this, 'jetpack_infinite_scroll_loop' ),
 				'footer_widgets' => array(
@@ -108,7 +107,7 @@ if ( ! class_exists( 'Storefront_Jetpack' ) ) :
 		 * @return array       infinite scroll args.
 		 */
 		public function fix_duplicate_products( $args ) {
-			if ( 'product' === $args['post_type'] ) {
+			if ( ( isset( $args['post_type'] ) && 'product' === $args['post_type'] ) || ( isset( $args['taxonomy'] ) && 'product_cat' === $args['taxonomy'] ) ) {
 				$args['offset'] = $args['posts_per_page'] * $args['paged'];
 			}
 

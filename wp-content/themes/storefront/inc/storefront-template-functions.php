@@ -127,7 +127,7 @@ if ( ! function_exists( 'storefront_credit' ) ) {
 		<div class="site-info">
 			<?php echo esc_html( apply_filters( 'storefront_copyright_text', $content = '&copy; ' . get_bloginfo( 'name' ) . ' ' . date( 'Y' ) ) ); ?>
 			<?php if ( apply_filters( 'storefront_credit_link', true ) ) { ?>
-			<br /> <?php printf( esc_attr__( '%1$s designed by %2$s.', 'storefront' ), 'Storefront', '<a href="http://www.woocommerce.com" title="WooCommerce - The Best eCommerce Platform for WordPress" rel="author">WooCommerce</a>' ); ?>
+			<br /> <?php echo '<a href="https://woocommerce.com" target="_blank" title="' . esc_attr__( 'WooCommerce - The Best eCommerce Platform for WordPress', 'storefront' ) . '" rel="author">' . esc_html__( 'Built with Storefront &amp; WooCommerce', 'storefront' ) . '</a>' ?>
 			<?php } ?>
 		</div><!-- .site-info -->
 		<?php
@@ -423,11 +423,11 @@ if ( ! function_exists( 'storefront_post_meta' ) ) {
 			<?php if ( 'post' == get_post_type() ) : // Hide category and tag text for pages on Search.
 
 			?>
-			<div class="author">
+			<div class="vcard author">
 				<?php
 					echo get_avatar( get_the_author_meta( 'ID' ), 128 );
 					echo '<div class="label">' . esc_attr( __( 'Written by', 'storefront' ) ) . '</div>';
-					the_author_posts_link();
+					echo sprintf( '<a href="%1$s" class="url fn" rel="author">%2$s</a>', esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ), get_the_author() );
 				?>
 			</div>
 			<?php
@@ -912,81 +912,5 @@ if ( ! function_exists( 'storefront_primary_navigation_wrapper_close' ) ) {
 	 */
 	function storefront_primary_navigation_wrapper_close() {
 		echo '</div>';
-	}
-}
-
-if ( ! function_exists( 'storefront_init_structured_data' ) ) {
-	/**
-	 * Generates structured data.
-	 *
-	 * Hooked into the following action hooks:
-	 *
-	 * - `storefront_loop_post`
-	 * - `storefront_single_post`
-	 * - `storefront_page`
-	 *
-	 * Applies `storefront_structured_data` filter hook for structured data customization :)
-	 */
-	function storefront_init_structured_data() {
-
-		// Post's structured data.
-		if ( is_home() || is_category() || is_date() || is_search() || is_single() && ( storefront_is_woocommerce_activated() && ! is_woocommerce() ) ) {
-			$image = wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID() ), 'normal' );
-			$logo  = wp_get_attachment_image_src( get_theme_mod( 'custom_logo' ), 'full' );
-
-			$json = array();
-			
-			$json['@type'] = 'BlogPosting';
-
-			$json['mainEntityOfPage'] = array(
-				'@type' => 'webpage',
-				'@id'   => get_the_permalink(),
-			);
-
-			$json['publisher'] = array(
-				'@type' => 'organization',
-				'name'  => get_bloginfo( 'name' ),
-			);
-
-			if ( $logo ) {
-				$json['publisher']['logo'] = array(
-					'@type'  => 'ImageObject',
-					'url'    => $logo[0],
-					'width'  => $logo[1],
-					'height' => $logo[2],
-				);
-			}
-
-			$json['author'] = array(
-				'@type' => 'person',
-				'name'  => get_the_author(),
-			);
-
-			if ( $image ) {
-				$json['image'] = array(
-					'@type'  => 'ImageObject',
-					'url'    => $image[0],
-					'width'  => $image[1],
-					'height' => $image[2],
-				);
-			}
-			
-			$json['datePublished'] = get_post_time( 'c' );
-			$json['dateModified']  = get_the_modified_date( 'c' );
-			$json['name']          = get_the_title();
-			$json['headline']      = $json['name'];
-			$json['description']   = get_the_excerpt();
-
-		// Page's structured data.
-		} elseif ( is_page() ) {
-			$json['@type']       = 'WebPage';
-			$json['url']         = get_the_permalink();
-			$json['name']        = get_the_title();
-			$json['description'] = get_the_excerpt();
-		}
-
-		if ( isset( $json ) ) {
-			Storefront::set_structured_data( apply_filters( 'storefront_structured_data', $json ) );
-		}
 	}
 }

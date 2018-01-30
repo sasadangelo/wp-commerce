@@ -43,6 +43,7 @@
     font-size: 12px;
     padding: 5px 10px !important;
     text-decoration: none;
+    word-wrap: normal !important;
 }
 .language-js { background: #e4a228; }
 .language-php { background: #e45126; }

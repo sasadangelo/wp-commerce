@@ -248,8 +248,10 @@ class WC_Gateway_PPEC_Client {
 		$settings = wc_gateway_ppec()->settings;
 
 		$params              = array();
-		$params['LOGOIMG']   = $settings->logo_image_url;
-		$params['HDRIMG']    = $settings->header_image_url;
+		$logo_url_or_id      = $settings->logo_image_url;
+		$header_url_or_id    = $settings->header_image_url;
+		$params['LOGOIMG']   = filter_var( $logo_url_or_id, FILTER_VALIDATE_URL )   ? $logo_url_or_id   : wp_get_attachment_image( $logo_url_or_id, 'thumbnail' );
+		$params['HDRIMG']    = filter_var( $header_url_or_id, FILTER_VALIDATE_URL ) ? $header_url_or_id : wp_get_attachment_image( $header_url_or_id, 'thumbnail' );
 		$params['PAGESTYLE'] = $settings->page_style;
 		$params['BRANDNAME'] = $settings->get_brand_name();
 		$params['RETURNURL'] = $this->_get_return_url( $args );
@@ -408,11 +410,14 @@ class WC_Gateway_PPEC_Client {
 	 * @return array Line item
 	 */
 	protected function _get_extra_offset_line_item( $amount ) {
+		$settings = wc_gateway_ppec()->settings;
+		$decimals = $settings->get_number_of_decimal_digits();
+
 		return array(
 			'name'        => 'Line Item Amount Offset',
 			'description' => 'Adjust cart calculation discrepancy',
 			'quantity'    => 1,
-			'amount'      => $amount,
+			'amount'      => round( $amount, $decimals ),
 		);
 	}
 
@@ -426,11 +431,14 @@ class WC_Gateway_PPEC_Client {
 	 * @return array Line item
 	 */
 	protected function _get_extra_discount_line_item( $amount ) {
+		$settings = wc_gateway_ppec()->settings;
+		$decimals = $settings->get_number_of_decimal_digits();
+
 		return  array(
 			'name'        => 'Discount',
 			'description' => 'Discount Amount',
 			'quantity'    => 1,
-			'amount'      => '-' . $amount,
+			'amount'      => '-' . round( $amount, $decimals ),
 		);
 	}
 
@@ -448,8 +456,8 @@ class WC_Gateway_PPEC_Client {
 		$settings = wc_gateway_ppec()->settings;
 
 		$decimals      = $settings->get_number_of_decimal_digits();
-		$discounts     = round( WC()->cart->get_cart_discount_total(), $decimals );
 		$rounded_total = $this->_get_rounded_total_in_cart();
+		$discounts     = WC()->cart->get_cart_discount_total();
 
 		$details = array(
 			'total_item_amount' => round( WC()->cart->cart_contents_total, $decimals ) + $discounts,
@@ -458,72 +466,7 @@ class WC_Gateway_PPEC_Client {
 			'items'             => $this->_get_paypal_line_items_from_cart(),
 		);
 
-		$details['order_total'] = round(
-			$details['total_item_amount'] + $details['order_tax'] + $details['shipping'],
-			$decimals
-		);
-
-		// Compare WC totals with what PayPal will calculate to see if they match.
-		// if they do not match, check to see what the merchant would like to do.
-		// Options are to remove line items or add a line item to adjust for
-		// the difference.
-		if ( $details['total_item_amount'] != $rounded_total ) {
-			if ( 'add' === $settings->get_subtotal_mismatch_behavior() ) {
-				// Add line item to make up different between WooCommerce
-				// calculations and PayPal calculations.
-				$diff = round( $details['total_item_amount'] - $rounded_total, $decimals );
-				if ( $diff != 0 ) {
-					$extra_line_item = $this->_get_extra_offset_line_item( $diff );
-
-					$details['items'][]            = $extra_line_item;
-					$details['total_item_amount'] += $extra_line_item['amount'];
-					$details['order_total']       += $extra_line_item['amount'];
-				}
-			} else {
-				// Omit line items altogether.
-				unset( $details['items'] );
-			}
-		}
-
-		// Enter discount shenanigans. Item total cannot be 0 so make modifications
-		// accordingly.
-		if ( $details['total_item_amount'] == $discounts ) {
-			// Omit line items altogether.
-			unset( $details['items'] );
-			$details['ship_discount_amount'] = 0;
-			$details['total_item_amount']   -= $discounts;
-			$details['order_total']         -= $discounts;
-		} else {
-			if ( $discounts > 0 ) {
-				$details['items'][] = $this->_get_extra_offset_line_item( - abs( $discounts ) );
-			}
-
-			$details['ship_discount_amount'] = 0;
-			$details['total_item_amount']   -= $discounts;
-			$details['order_total']         -= $discounts;
-		}
-
-		// If the totals don't line up, adjust the tax to make it work (it's
-		// probably a tax mismatch).
-		$wc_order_total = round( WC()->cart->total, $decimals );
-		if ( $wc_order_total != $details['order_total'] ) {
-			// tax cannot be negative
-			if ( $details['order_total'] < $wc_order_total ) {
-				$details['order_tax'] += $wc_order_total - $details['order_total'];
-				$details['order_tax'] = round( $details['order_tax'], $decimals );
-			} else {
-				$details['ship_discount_amount'] += $wc_order_total - $details['order_total'];
-				$details['ship_discount_amount'] = round( $details['ship_discount_amount'], $decimals );
-			}
-
-			$details['order_total'] = $wc_order_total;
-		}
-
-		if ( ! is_numeric( $details['shipping'] ) ) {
-			$details['shipping'] = 0;
-		}
-
-		return $details;
+		return $this->get_details( $details, $discounts, $rounded_total, WC()->cart->total );
 	}
 
 	/**
@@ -539,7 +482,7 @@ class WC_Gateway_PPEC_Client {
 
 		$items = array();
 		foreach ( WC()->cart->cart_contents as $cart_item_key => $values ) {
-			$amount = round( $values['line_subtotal'] / $values['quantity'] , $decimals );
+			$amount = round( $values['line_total'] / $values['quantity'] , $decimals );
 
 			if ( version_compare( WC_VERSION, '3.0', '<' ) ) {
 				$name = $values['data']->post->post_title;
@@ -584,6 +527,102 @@ class WC_Gateway_PPEC_Client {
 	}
 
 	/**
+	 * Get details from populated price array
+	 *
+	 * @since 1.4.1
+	 *
+	 * @param array $details Prices
+	 *
+	 * @return array Details
+	 */
+	protected function get_details( $details, $discounts, $rounded_total, $total ) {
+		$settings = wc_gateway_ppec()->settings;
+		$decimals = $settings->get_number_of_decimal_digits();
+
+		$discounts = round( $discounts, $decimals );
+
+		$details['order_total'] = round(
+			$details['total_item_amount'] + $details['order_tax'] + $details['shipping'],
+			$decimals
+		);
+
+		// Compare WC totals with what PayPal will calculate to see if they match.
+		// if they do not match, check to see what the merchant would like to do.
+		// Options are to remove line items or add a line item to adjust for
+		// the difference.
+		$diff = 0;
+
+		if ( $details['total_item_amount'] != $rounded_total ) {
+			if ( 'add' === $settings->get_subtotal_mismatch_behavior() ) {
+				// Add line item to make up different between WooCommerce
+				// calculations and PayPal calculations.
+				$diff = round( $details['total_item_amount'] - $rounded_total, $decimals );
+				if ( abs( $diff ) > 0.000001 && 0.0 !== (float) $diff ) {
+					$extra_line_item = $this->_get_extra_offset_line_item( $diff );
+
+					$details['items'][]            = $extra_line_item;
+					$details['total_item_amount'] += $extra_line_item['amount'];
+					$details['order_total']       += $extra_line_item['amount'];
+				}
+			} else {
+				// Omit line items altogether.
+				unset( $details['items'] );
+			}
+		}
+
+		// Enter discount shenanigans. Item total cannot be 0 so make modifications
+		// accordingly.
+		if ( $details['total_item_amount'] == $discounts ) {
+			// Omit line items altogether.
+			unset( $details['items'] );
+		}
+
+		$details['ship_discount_amount'] = 0;
+
+		// AMT
+		$details['order_total']       = $details['order_total'] - $discounts;
+
+		// ITEMAMT
+		$details['total_item_amount'] = $details['total_item_amount'] - $discounts;
+
+		// If the totals don't line up, adjust the tax to make it work (it's
+		// probably a tax mismatch).
+		$wc_order_total = round( $total, $decimals );
+		$discounted_total = $details['order_total'];
+
+		if ( $wc_order_total != $discounted_total ) {
+			// tax cannot be negative
+			if ( $discounted_total < $wc_order_total ) {
+				$details['order_tax'] += $wc_order_total - $discounted_total;
+				$details['order_tax'] = round( $details['order_tax'], $decimals );
+			} else {
+				$details['ship_discount_amount'] += $wc_order_total - $discounted_total;
+				$details['ship_discount_amount'] = round( $details['ship_discount_amount'], $decimals );
+			}
+
+			$details['order_total'] = $wc_order_total;
+		}
+
+		if ( ! is_numeric( $details['shipping'] ) ) {
+			$details['shipping'] = 0;
+		}
+
+		$lisum = 0;
+
+		if ( ! empty( $details['items'] ) ) {
+			foreach ( $details['items'] as $li => $values ) {
+				$lisum += $values['quantity'] * $values['amount'];
+			}
+		}
+
+		if ( abs( $lisum ) > 0.000001 && 0.0 !== (float) $diff ) {
+			$details['items'][] = $this->_get_extra_offset_line_item( $details['total_item_amount'] - $lisum );
+		}
+
+		return $details;
+	}
+
+	/**
 	 * Get details from given order_id.
 	 *
 	 * This is the details when buyer is checking out from checkout page.
@@ -599,74 +638,17 @@ class WC_Gateway_PPEC_Client {
 		$settings = wc_gateway_ppec()->settings;
 
 		$decimals      = $settings->is_currency_supports_zero_decimal() ? 0 : 2;
-		$discounts     = round( $order->get_total_discount(), $decimals );
 		$rounded_total = $this->_get_rounded_total_in_order( $order );
+		$discounts     = $order->get_total_discount();
 
 		$details = array(
+			'total_item_amount' => round( $order->get_subtotal(), $decimals ) + $discounts,
 			'order_tax'         => round( $order->get_total_tax(), $decimals ),
 			'shipping'          => round( ( version_compare( WC_VERSION, '3.0', '<' ) ? $order->get_total_shipping() : $order->get_shipping_total() ), $decimals ),
-			'total_item_amount' => round( $order->get_subtotal(), $decimals ),
 			'items'             => $this->_get_paypal_line_items_from_order( $order ),
 		);
 
-		$details['order_total'] = round( $details['total_item_amount'] + $details['order_tax'] + $details['shipping'], $decimals );
-
-		// Compare WC totals with what PayPal will calculate to see if they match.
-		// if they do not match, check to see what the merchant would like to do.
-		// Options are to remove line items or add a line item to adjust for
-		// the difference.
-		if ( $details['total_item_amount'] != $rounded_total ) {
-			if ( 'add' === $settings->get_subtotal_mismatch_behavior() ) {
-				// Add line item to make up different between WooCommerce
-				// calculations and PayPal calculations.
-				$diff = round( $details['total_item_amount'] - $rounded_total, $decimals );
-
-				$details['items'][] = $this->_get_extra_offset_line_item( $diff );
-
-			} else {
-				// Omit line items altogether.
-				unset( $details['items'] );
-			}
-		}
-
-		// Enter discount shenanigans. Item total cannot be 0 so make modifications
-		// accordingly.
-		if ( $details['total_item_amount'] == $discounts ) {
-			// Omit line items altogether.
-			unset( $details['items'] );
-			$details['ship_discount_amount'] = 0;
-			$details['total_item_amount']   -= $discounts;
-			$details['order_total']         -= $discounts;
-		} else {
-			if ( $discounts > 0 ) {
-				$details['items'][] = $this->_get_extra_discount_line_item( $discounts );
-
-				$details['total_item_amount'] -= $discounts;
-				$details['order_total']       -= $discounts;
-			}
-
-			$details['ship_discount_amount'] = 0;
-		}
-
-		// If the totals don't line up, adjust the tax to make it work (it's
-		// probably a tax mismatch).
-		$wc_order_total = round( $order->get_total(), $decimals );
-		if ( $wc_order_total != $details['order_total'] ) {
-			// tax cannot be negative
-			if ( $details['order_total'] < $wc_order_total ) {
-				$details['order_tax'] += $wc_order_total - $details['order_total'];
-				$details['order_tax'] = round( $details['order_tax'], $decimals );
-			} else {
-				$details['ship_discount_amount'] += $wc_order_total - $details['order_total'];
-				$details['ship_discount_amount'] = round( $details['ship_discount_amount'], $decimals );
-			}
-
-			$details['order_total'] = $wc_order_total;
-		}
-
-		if ( ! is_numeric( $details['shipping'] ) ) {
-			$details['shipping'] = 0;
-		}
+		$details = $this->get_details( $details, $order->get_total_discount(), $rounded_total, $order->get_total() );
 
 		// PayPal shipping address from order.
 		$shipping_address = new PayPal_Address;
@@ -814,13 +796,14 @@ class WC_Gateway_PPEC_Client {
 	 * @return array Params for DoExpressCheckoutPayment call
 	 */
 	public function get_do_express_checkout_params( array $args ) {
-		$settings  = wc_gateway_ppec()->settings;
-		$order     = wc_get_order( $args['order_id'] );
+		$settings     = wc_gateway_ppec()->settings;
+		$order        = wc_get_order( $args['order_id'] );
 
-		$old_wc    = version_compare( WC_VERSION, '3.0', '<' );
-		$order_id  = $old_wc ? $order->id : $order->get_id();
-		$details   = $this->_get_details_from_order( $order_id );
-		$order_key = $old_wc ? $order->order_key : $order->get_order_key();
+		$old_wc       = version_compare( WC_VERSION, '3.0', '<' );
+		$order_id     = $old_wc ? $order->id : $order->get_id();
+		$order_number = $order->get_order_number();
+		$details      = $this->_get_details_from_order( $order_id );
+		$order_key    = $old_wc ? $order->order_key : $order->get_order_key();
 
 		$params = array(
 			'TOKEN'                          => $args['token'],
@@ -837,8 +820,9 @@ class WC_Gateway_PPEC_Client {
 			'PAYMENTREQUEST_0_PAYMENTACTION' => $settings->get_paymentaction(),
 			'PAYMENTREQUEST_0_INVNUM'        => $settings->invoice_prefix . $order->get_order_number(),
 			'PAYMENTREQUEST_0_CUSTOM'        => json_encode( array(
-				'order_id'  => $order_id,
-				'order_key' => $order_key,
+				'order_id'     => $order_id,
+				'order_number' => $order_number,
+				'order_key'    => $order_key,
 			) ),
 			'NOSHIPPING'                     => WC_Gateway_PPEC_Plugin::needs_shipping() ? 0 : 1,
 		);

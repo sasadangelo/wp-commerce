@@ -1,12 +1,11 @@
 === Simple Custom CSS and JS ===
 Created: 06/12/2015
 Contributors: diana_burduja
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=diana.burduja@gmail.com&lc=AT&item_name=Diana%20Burduja&item_number=WP%2dImage%2dZoooom%2dplugin&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Email: diana@burduja.eu
 Tags: CSS, JS, javascript, custom CSS, custom JS, custom style, site css, add style, customize theme, custom code, external css, css3, style, styles, stylesheet, theme, editor, design, admin
 Requires at least: 3.0.1
-Tested up to: 4.8
-Stable tag: 3.4 
+Tested up to: 4.9
+Stable tag: 3.13 
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -99,6 +98,8 @@ By default only the Administrator will be able to publish/edit/delete Custom Cod
 = Compatibility with qTranslate X plugin =
 * If the [qTranslate X](https://wordpress.org/plugins/qtranslate-x/) plugin is adding some `[:]` or `[:en]` characters to your code, then you need to remove the `custom-css-js` post type from the qTranslate settings. Check out [this screenshot](https://www.silkypress.com/wp-content/uploads/2016/08/ccj_qtranslate_compatibility.png) on how to do that.
 
+= My website has HTTPS urls, but the codes are linked as HTTP =
+The URL for the linked Codes is built just like the URL for other media (from Media Library) by using the WordPress Address option found on the WP Admin -> Settings -> General page, as shown in [this screenshot](https://www.silkypress.com/wp-content/uploads/2016/12/ccj-siteurl.png). If the WordPress Address has HTTPS in the url, then the Custom Codes and all the other media will have HTTPS in the url.
 
 
 == Screenshots ==
@@ -112,6 +113,53 @@ By default only the Administrator will be able to publish/edit/delete Custom Cod
 $. Add/Edit HTML 
 
 == Changelog ==
+
+= 3.13 =
+* 01/12/2018
+* Feature: add the "Keep the HTML entities, don't convert to its character" option
+
+= 3.12 =
+* 01/03/2018
+* Reverse to the `wp_footer` function for the footer scripts, as the `print_footer_scripts` function is used also in the admin, which lead to many broken back-ends
+
+= 3.11 =
+* 01/03/2018
+* Use the `print_footer_scripts` function for the footer scripts (https://wordpress.org/support/topic/footer-code-position-before-external-scripts-is-overridden/)
+* Escape selectively the HTML characters in the editor (https://wordpress.org/support/topic/annoying-bug-in-text-editor/)
+
+= 3.10 =
+* 12/15/2017
+* Fix: https://wordpress.org/support/topic/broken-layout-of-code-snippet-type-color-tag-css-html-js-on-main-list-table/
+* Feature: add filter by code type
+* Feature: make the 'Modified' column sortable
+* Fix: if the default comment remains in the "Add Custom JS", then there was no <script> tags added to the code, as the comment contained a <script> tag
+
+= 3.9 =
+* 12/01/2017
+* Feature: add "Last edited ..." information under the editor
+* Fix: jump to line when searching
+* Tweak: add message that the Code Revision data is dummy
+
+= 3.8 =
+* 10/19/2017
+* Declare compatibility with WooCommerce 3.2 (https://woocommerce.wordpress.com/2017/08/28/new-version-check-in-woocommerce-3-2/)
+* Fix: avoid conflicts with other plugins that implement the CodeMirror editor
+* Update the CodeMirror library to 5.28 version
+
+= 3.7 =
+* 10/06/2017
+* Add French and Polish translation
+
+= 3.6 =
+* 09/07/2017
+* Fix: compatibility with the CSS Plus plugin
+
+= 3.5 =
+* 08/25/2017
+* Code refactoring
+* Add activate/deactivate link to row actions and in Publish box
+* Make the activate/deactivate links work with AJAX
+* Add Turkish translation
 
 = 3.4 =
 * 07/11/2017

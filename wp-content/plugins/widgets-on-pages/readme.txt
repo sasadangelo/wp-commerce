@@ -3,10 +3,10 @@ Contributors: toddhalfpenny
 Donate link: https://datamad.co.uk/donate/
 Tags: widgets, widgets in page, widgets in post, sidebar, pages, post, shortcode, inline, widgetise, widgetize, theme
 Requires at least: 2.8
-Tested up to: 4.8
-Stable tag: 1.1.0
+Tested up to: 4.9
+Stable tag: 1.4
 
-The easiest and highest rated way to Add Widgets or Sidebars to Posts and Pages using shortcodes or template tags.
+The easiest and highest rated way to Add Widgets or Sidebars to Posts and Pages using Visual editor, shortcodes or template tags.
 
 == Description ==
 
@@ -22,7 +22,18 @@ Sidebars can be included in the post/page by using a shortcode like the followin
 
 > With the [PRO](https://datamad.co.uk/wordpress-plugins/widgets-on-pages/) version the widgets can be inserted simply with clicks-not-code using a wizard in the visual editor. This version also includes layout options to easily set the widgets in columns/grid presentation.
 >
-> The Pro version also includes support for auto-inserting widgets/sidebars into posts and/or pages, with the ability to have them appear before or after the main content.
+> Pro version also supports the configurable option to automatically add widgets to all your posts and/or pages. Choose the layout options and whether to add the sidebar and widgets before or after the content. Ideal for adding lists of related posts to the end of every post. Each post and page can also be individually excluded from the auto-inclusion of the widgets.
+>
+> [Pro version](https://datamad.co.uk/wordpress-plugins/widgets-on-pages/) key features
+> * Responsive Horizontal/Column/Grid layout
+> * Auto insert in Header, Content, or Footer
+> * Priority Support
+
+**Basic In-Content Instructions**
+
+* Create a Turbo Sidebar, these are your special widget containers
+* Add widgets to the Turbo Sidebar in the same way as you do for normal sidebars
+* If using the visual editor use the Add Turbo Sidebar button to add the Shortcode into your post or page where you'd like it to appear.
 
 The sidebars can also be added to any theme, using template tags. This is an ace way to add widgets/sidebars to a theme's header and footer (or any other part of a theme).
 
@@ -32,7 +43,7 @@ https://www.youtube.com/watch?v=w2LfCihCqRI
 
 **Current Features Include**
 
-* Highest Rating - 118 5* Reviews
+* Highest Rating - 122 5* Reviews
 * No Coding needed
 * Create unlimited sidebars
 * Place them in posts/pages/custom post types
@@ -41,9 +52,11 @@ https://www.youtube.com/watch?v=w2LfCihCqRI
 
 **Recent Reviews**
 
-**&#8727; &#8727; &#8727; &#8727; &#8727;** Works as advertised + timely response to support request - [3cstudio](https://wordpress.org/support/topic/works-as-advertised-timely-response-to-support-request/)
+**&#8727; &#8727; &#8727; &#8727; &#8727;**  Just purchased PRO version and well worth the money. - [@artmuns](https://wordpress.org/support/topic/extremely-useful-plugin-19/)
 
-**&#8727; &#8727; &#8727; &#8727; &#8727;** Saving me HOURS of work - [andynick](https://wordpress.org/support/topic/saving-me-hours-of-work/)
+**&#8727; &#8727; &#8727; &#8727; &#8727;** Works as advertised + timely response to support request - [@3cstudio](https://wordpress.org/support/topic/works-as-advertised-timely-response-to-support-request/)
+
+**&#8727; &#8727; &#8727; &#8727; &#8727;** Saving me HOURS of work - [@andynick](https://wordpress.org/support/topic/saving-me-hours-of-work/)
 
 == Installation ==
 
@@ -74,7 +87,9 @@ Yes... you can have an unlimited number of sidebars defined. The number availabl
 
 All of them. Yup, We've not come across a single non-working one yet.
 
-Yes... you can have an unlimited number of sidebars defined. The number available can be administered via the settings menu.
+= Auto Import for Headers/Footers isn't working - What now? =
+
+This is a new feature, and is handled differently for various themes. Although tested with a variety of different ones I'm aware that this might not work straight out the box for all users. Please [post a support ticket](https://wordpress.org/support/plugin/widgets-on-pages) and I'll look into it.
 
 == Screenshots ==
 
@@ -84,6 +99,47 @@ Yes... you can have an unlimited number of sidebars defined. The number availabl
 
 
 == Changelog ==
+
+= 1.4 =
+
+1. Free version now supports TinyMCE button to add widgets
+
+
+= 1.3 =
+
+1. Adding buttons to admin UI for copying/pasting the Shortcodes and Template Tags
+1. PRO - More Auto-Insert options. Can now auto-insert before/after header or footer, too.
+1. Updated main admin page to show video how to, following feedback from users.
+1. Fixed [issue](https://wordpress.org/support/topic/warning-call_user_func_array-expects-parameter-1-to-be-a-valid-callback-13/#post-9420083) with < PHP5.5. Introduced with the conditional showing of shortcode/template-tag meta boxes as part of v1.2
+
+
+= 1.2.3 =
+
+1. Fixed [issue](https://wordpress.org/support/topic/widgets-on-pages-partially-breaks-subscribe-to-comments-reloaded/#post-9389051) - Conflict with some admin pages - Seen with Subscribe to Comments Reloaded
+
+
+= 1.2.2 =
+
+1. Change capability of TurboSidebars menu item to 'edit_post' to allow editor access
+
+
+= 1.2.1 =
+
+1. Bugfix - remove TurboSidebars from Search results
+
+
+= 1.2 =
+
+1. Pro - Add *Auto Insert* support for automatically adding Widgets into posts and page, with options for before or after content, restricting by post/page and explicitly excluding from specific posts and pages.
+1. Add nice message if trying to activate plugin when other versions may already be active
+1. Remove Turbo Sidebar shortcode-meta-box prior to 1st save.
+1. Add Template Tag to Turbo Sidebar meta box
+
+
+= 1.1.1 =
+
+1. Bugfix - remove TurboSidebars from Search results
+
 
 = 1.1.0 =
 

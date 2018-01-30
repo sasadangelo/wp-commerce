@@ -168,7 +168,7 @@ class CustomCSSandJS_Addons {
             <td>
                 <input type="button" class="button-secondary" value="<?php esc_attr_e('Compare', 'custom-css-js'); ?>" id="revisions-compare-button" />
             </td>
-            <td colspan="2"> &nbsp;</td>
+            <td colspan="2" style="text-align: center;"> &uarr; This is only an example, not real data. &uarr; </td>
             <td>
                 <input type="button" class="button-secondary" value="<?php esc_attr_e('Delete', 'custom-css-js'); ?>" id="revisions-delete-button" />
             </td>

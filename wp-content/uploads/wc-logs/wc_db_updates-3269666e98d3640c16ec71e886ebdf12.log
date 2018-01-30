@@ -1,0 +1,13 @@
+2018-01-29T23:47:00+00:00 INFO Queuing 3.1.2 - wc_update_312_shop_manager_capabilities
+2018-01-29T23:47:00+00:00 INFO Queuing 3.1.2 - wc_update_312_db_version
+2018-01-29T23:47:00+00:00 INFO Queuing 3.2.0 - wc_update_320_mexican_states
+2018-01-29T23:47:00+00:00 INFO Queuing 3.2.0 - wc_update_320_db_version
+2018-01-29T23:47:01+00:00 INFO Running wc_update_312_shop_manager_capabilities callback
+2018-01-29T23:47:01+00:00 INFO Finished wc_update_312_shop_manager_capabilities callback
+2018-01-29T23:47:01+00:00 INFO Running wc_update_312_db_version callback
+2018-01-29T23:47:01+00:00 INFO Finished wc_update_312_db_version callback
+2018-01-29T23:47:01+00:00 INFO Running wc_update_320_mexican_states callback
+2018-01-29T23:47:01+00:00 INFO Finished wc_update_320_mexican_states callback
+2018-01-29T23:47:01+00:00 INFO Running wc_update_320_db_version callback
+2018-01-29T23:47:01+00:00 INFO Finished wc_update_320_db_version callback
+2018-01-29T23:47:01+00:00 INFO Data update complete

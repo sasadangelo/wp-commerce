@@ -14,7 +14,6 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 	 */
 	public function __construct() {
 		$this->has_fields         = false;
-		$this->icon               = 'https://www.paypalobjects.com/webstatic/en_US/i/buttons/pp-acceptance-small.png';
 		$this->supports[]         = 'refunds';
 		$this->method_title       = __( 'PayPal Express Checkout', 'woocommerce-gateway-paypal-express-checkout' );
 		$this->method_description = __( 'Allow customers to conveniently checkout directly with PayPal.', 'woocommerce-gateway-paypal-express-checkout' );
@@ -50,12 +49,12 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 		}
 
 		$this->debug                      = 'yes' === $this->get_option( 'debug', 'no' );
-		$this->invoice_prefix             = $this->get_option( 'invoice_prefix', 'WC-' );
+		$this->invoice_prefix             = $this->get_option( 'invoice_prefix', '' );
 		$this->instant_payments           = 'yes' === $this->get_option( 'instant_payments', 'no' );
 		$this->require_billing            = 'yes' === $this->get_option( 'require_billing', 'no' );
 		$this->paymentaction              = $this->get_option( 'paymentaction', 'sale' );
-		$this->logo_image_url             = $this->get_option( 'logo_image_url' );
 		$this->subtotal_mismatch_behavior = $this->get_option( 'subtotal_mismatch_behavior', 'add' );
+		$this->use_ppc                    = false;
 
 		add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 
@@ -65,6 +64,11 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 				$this->title        = $this->get_option( 'title' );
 				$this->description  = $this->get_option( 'description' );
 			}
+		} else {
+			// Image upload.
+			wp_enqueue_media();
+
+			wp_enqueue_script( 'wc-gateway-ppec-settings', wc_gateway_ppec()->plugin_url . 'assets/js/wc-gateway-ppec-settings.js', array( 'jquery' ), wc_gateway_ppec()->version, true );
 		}
 	}
 
@@ -93,7 +97,7 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 			try {
 				return array(
 					'result'   => 'success',
-					'redirect' => $checkout->start_checkout_from_checkout( $order_id ),
+					'redirect' => $checkout->start_checkout_from_checkout( $order_id, $this->use_ppc ),
 				);
 			} catch ( PayPal_API_Exception $e ) {
 				wc_add_notice( $e->getMessage(), 'error' );
@@ -192,14 +196,6 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 	 * Do some additonal validation before saving options via the API.
 	 */
 	public function process_admin_options() {
-		// Validate logo.
-		$logo_image_url = wc_clean( $_POST['woocommerce_ppec_paypal_logo_image_url'] );
-
-		if ( ! empty( $logo_image_url ) && ! preg_match( '/https?:\/\/[a-zA-Z0-9][a-zA-Z0-9.-]+[a-zA-Z0-9](\/[a-zA-Z0-9.\/?&%#]*)?/', $logo_image_url ) ) {
-			WC_Admin_Settings::add_error( __( 'Error: The logo image URL you provided is not valid and cannot be used.', 'woocommerce-gateway-paypal-express-checkout' ) );
-			unset( $_POST['woocommerce_ppec_paypal_logo_image_url'] );
-		}
-
 		// If a certificate has been uploaded, read the contents and save that string instead.
 		if ( array_key_exists( 'woocommerce_ppec_paypal_api_certificate', $_FILES )
 			&& array_key_exists( 'tmp_name', $_FILES['woocommerce_ppec_paypal_api_certificate'] )
@@ -469,15 +465,90 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Whether PayPal credit is supported.
+	 * Generate Image HTML.
 	 *
-	 * @since 1.2.0
-	 *
-	 * @return bool Returns true if PayPal credit is supported
+	 * @param  mixed $key
+	 * @param  mixed $data
+	 * @since  1.5.0
+	 * @return string
 	 */
-	public function is_credit_supported() {
-		$base = wc_get_base_location();
+	public function generate_image_html( $key, $data ) {
+		$field_key = $this->get_field_key( $key );
+		$defaults  = array(
+			'title'             => '',
+			'disabled'          => false,
+			'class'             => '',
+			'css'               => '',
+			'placeholder'       => '',
+			'type'              => 'text',
+			'desc_tip'          => false,
+			'description'       => '',
+			'custom_attributes' => array(),
+		);
 
-		return 'US' === $base['country'];
+		$data  = wp_parse_args( $data, $defaults );
+		$value = $this->get_option( $key );
+
+		// Hide show add remove buttons.
+		$maybe_hide_add_style    = '';
+		$maybe_hide_remove_style = '';
+
+		// For backwards compatibility (customers that already have set a url)
+		$value_is_url            = filter_var( $value, FILTER_VALIDATE_URL ) !== false;
+
+		if ( empty( $value ) || $value_is_url ) {
+			$maybe_hide_remove_style = 'display: none;';
+		} else {
+			$maybe_hide_add_style = 'display: none;';
+		}
+
+		ob_start();
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<?php echo $this->get_tooltip_html( $data ); ?>
+				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?></label>
+			</th>
+
+			<td class="image-component-wrapper">
+				<div class="image-preview-wrapper">
+					<?php
+					if ( ! $value_is_url ) {
+						echo wp_get_attachment_image( $value, 'thumbnail' );
+					} else {
+						echo sprintf( __( 'Already using URL as image: %s', 'woocommerce-gateway-paypal-express-checkout' ), $value );
+					}
+					?>
+				</div>
+
+				<button
+					class="button image_upload"
+					data-field-id="<?php echo esc_attr( $field_key ); ?>"
+					data-media-frame-title="<?php echo esc_attr( __( 'Select a image to upload', 'woocommerce-gateway-paypal-express-checkout' ) ); ?>"
+					data-media-frame-button="<?php echo esc_attr( __( 'Use this image', 'woocommerce-gateway-paypal-express-checkout' ) ); ?>"
+					data-add-image-text="<?php echo esc_attr( __( 'Add image', 'woocommerce-gateway-paypal-express-checkout' ) ); ?>"
+					style="<?php echo esc_attr( $maybe_hide_add_style ); ?>"
+				>
+					<?php echo esc_html__( 'Add image', 'woocommerce-gateway-paypal-express-checkout' ); ?>
+				</button>
+
+				<button
+					class="button image_remove"
+					data-field-id="<?php echo esc_attr( $field_key ); ?>"
+					style="<?php echo esc_attr( $maybe_hide_remove_style ); ?>"
+				>
+					<?php echo esc_html__( 'Remove image', 'woocommerce-gateway-paypal-express-checkout' ); ?>
+				</button>
+
+				<input type="hidden"
+					name="<?php echo esc_attr( $field_key ); ?>"
+					id="<?php echo esc_attr( $field_key ); ?>"
+					value="<?php echo esc_attr( $value ); ?>"
+				/>
+			</td>
+		</tr>
+		<?php
+
+		return ob_get_clean();
 	}
 }

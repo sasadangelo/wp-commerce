@@ -56,5 +56,53 @@ jQuery(document).ready( function($) {
         });
     }
 
+    // Activate/deactivate codes with AJAX
+    $(".ccj_activate_deactivate").click( function(e) {
+        var url = $(this).attr('href');
+        var code_id = $(this).attr('data-code-id');
+        e.preventDefault(); 
+        $.ajax({
+            url: url, 
+            success: function(data){
+                if (data === 'yes') {
+                    ccj_activate_deactivate(code_id, false);
+                }
+                if (data === 'no') {
+                    ccj_activate_deactivate(code_id, true);
+                }
+            }
+        });
+    });
+
+    // Toggle the signs for activating/deactivating codes
+    function ccj_activate_deactivate(code_id, action) {
+        var row = $('tr#post-'+code_id);
+        if ( action === true ) {
+            row.css('opacity', '1');
+            row.find('.row-actions .ccj_activate_deactivate')
+                .text(CCJ.deactivate)
+                .attr('title', CCJ.active_title);
+            row.find('td.active .dashicons')
+                .removeClass('dashicons-star-empty')
+                .addClass('dashicons-star-filled');
+            row.find('td.active .ccj_activate_deactivate')
+                .attr('title', CCJ.active_title);
+            $('#activate-action span').text(CCJ.active);
+            $('#activate-action .ccj_activate_deactivate').text(CCJ.deactivate);
+        } else {
+            row.css('opacity', '0.4');
+            row.find('.row-actions .ccj_activate_deactivate')
+                .text(CCJ.activate)
+                .attr('title', CCJ.deactive_title);
+            row.find('td.active .dashicons')
+                .removeClass('dashicons-star-filled')
+                .addClass('dashicons-star-empty');
+            row.find('td.active .ccj_activate_deactivate')
+                .attr('title', CCJ.deactive_title);
+            $('#activate-action span').text(CCJ.inactive);
+            $('#activate-action .ccj_activate_deactivate').text(CCJ.activate);
+        }
+    }
+
 });
 

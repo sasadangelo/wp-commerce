@@ -44,7 +44,7 @@ if ( $enable_ips && $needs_sandbox_creds ) {
 }
 
 $credit_enabled_label = __( 'Enable PayPal Credit', 'woocommerce-gateway-paypal-express-checkout' );
-if ( ! $this->is_credit_supported() ) {
+if ( ! wc_gateway_ppec_is_credit_supported() ) {
 	$credit_enabled_label .= '<p><em>' . __( 'This option is disabled. Currently PayPal Credit only available for U.S. merchants.', 'woocommerce-gateway-paypal-express-checkout' ) . '</em></p>';
 }
 
@@ -77,7 +77,7 @@ wc_enqueue_js( "
 			}
 		}).change();
 
-		$( '#woocommerce_ppec_paypal_mark_enabled' ).change(function(){
+		$( '#woocommerce_ppec_paypal_enabled' ).change(function(){
 			if ( $( this ).is( ':checked' ) ) {
 				$( ppec_mark_fields ).closest( 'tr' ).show();
 			} else {
@@ -281,7 +281,7 @@ return array(
 	),
 	'logo_image_url' => array(
 		'title'       => __( 'Logo Image (190×60)', 'woocommerce-gateway-paypal-express-checkout' ),
-		'type'        => 'text',
+		'type'        => 'image',
 		'description' => __( 'If you want PayPal to co-brand the checkout page with your logo, enter the URL of your logo image here.<br/>The image must be no larger than 190x60, GIF, PNG, or JPG format, and should be served over HTTPS.', 'woocommerce-gateway-paypal-express-checkout' ),
 		'default'     => '',
 		'desc_tip'    => true,
@@ -289,7 +289,7 @@ return array(
 	),
 	'header_image_url' => array(
 		'title'       => __( 'Header Image (750×90)', 'woocommerce-gateway-paypal-express-checkout' ),
-		'type'        => 'text',
+		'type'        => 'image',
 		'description' => __( 'If you want PayPal to co-brand the checkout page with your header, enter the URL of your header image here.<br/>The image must be no larger than 750x90, GIF, PNG, or JPG format, and should be served over HTTPS.', 'woocommerce-gateway-paypal-express-checkout' ),
 		'default'     => '',
 		'desc_tip'    => true,
@@ -319,7 +319,7 @@ return array(
 		'title'       => __( 'Enable PayPal Credit', 'woocommerce-gateway-paypal-express-checkout' ),
 		'type'        => 'checkbox',
 		'label'       => $credit_enabled_label,
-		'disabled'    => ! $this->is_credit_supported(),
+		'disabled'    => ! wc_gateway_ppec_is_credit_supported(),
 		'default'     => 'no',
 		'desc_tip'    => true,
 		'description' => __( 'This enables PayPal Credit, which displays a PayPal Credit button next to the Express Checkout button. PayPal Express Checkout lets you give customers access to financing through PayPal Credit® - at no additional cost to you. You get paid up front, even though customers have more time to pay. A pre-integrated payment button shows up next to the PayPal Button, and lets customers pay quickly with PayPal Credit®.', 'woocommerce-gateway-paypal-express-checkout' ),

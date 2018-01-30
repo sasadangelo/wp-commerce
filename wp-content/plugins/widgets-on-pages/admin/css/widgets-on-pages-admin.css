@@ -8,7 +8,7 @@
   border-radius: 5px 5px 0 0;
 }
 
-p#wop-shortcode {
+p#wop-shortcode, p#wop-template-tag  {
 	font-family: courier, monospace, sans-serif;
 }
 
@@ -21,4 +21,16 @@ i.mce-i-icon {
     -moz-osx-font-smoothing: grayscale;
     margin-left: -2px;
     padding-right: 2px
+}
+
+div#wop-cpt-autoinsert-meta-box label {
+  width: 9em;
+  display: inline-block;
+}
+
+table.wop-form-table td {
+  vertical-align: top;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  padding-top: 0;
 }

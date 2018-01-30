@@ -39,11 +39,11 @@ define('DB_HOST', 'localhost');
 /** Charset del Database da utilizzare nella creazione delle tabelle. */
 define('DB_CHARSET', 'utf8');
 
-/** Il tipo di Database Collation. Da non modificare se non si ha idea di cosa sia. */
+/** Il tipo di Collazione del Database. Da non modificare se non si ha idea di cosa sia. */
 define('DB_COLLATE', '');
 
 /**#@+
- * Chiavi Univoche di Autenticazione e di Salt.
+ * Chiavi Univoche di Autenticazione e di Salatura.
  *
  * Modificarle con frasi univoche differenti!
  * È possibile generare tali chiavi utilizzando {@link https://api.wordpress.org/secret-key/1.1/salt/ servizio di chiavi-segrete di WordPress.org}

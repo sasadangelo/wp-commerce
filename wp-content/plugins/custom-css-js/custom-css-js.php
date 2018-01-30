@@ -3,7 +3,7 @@
  * Plugin Name: Simple Custom CSS and JS 
  * Plugin URI: https://wordpress.org/plugins/custom-css-js/
  * Description: Easily add Custom CSS or JS to your website with an awesome editor.
- * Version: 3.4 
+ * Version: 3.13
  * Author: Diana Burduja
  * Author URI: https://www.silkypress.com/
  * License: GPL2
@@ -11,6 +11,8 @@
  * Text Domain: custom-css-js 
  * Domain Path: /languages/
  *
+ * WC requires at least: 2.3.0
+ * WC tested up to: 3.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,19 +20,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'CustomCSSandJS' ) ) :
-    define( 'CCJ_VERSION', '3.4' );
 /**
  * Main CustomCSSandJS Class
  *
  * @class CustomCSSandJS 
  */
 final class CustomCSSandJS {
-    public $plugins_url = '';
-    public $plugin_dir_path = '';
-    public $plugin_file = __FILE__;
+
     public $search_tree = false;
-    public $upload_dir = '';
-    public $upload_url = '';
     protected static $_instance = null; 
 
 
@@ -69,19 +66,17 @@ final class CustomCSSandJS {
      */
     public function __construct() {
         add_action( 'init', array( $this, 'register_post_type' ) );
-        $this->plugins_url = plugins_url( '/', __FILE__ );
-        $this->plugin_dir_path = plugin_dir_path( __FILE__ );
-        $wp_upload_dir = wp_upload_dir();
-        $this->upload_dir = $wp_upload_dir['basedir'] . '/custom-css-js';
-        $this->upload_url = $wp_upload_dir['baseurl'] . '/custom-css-js';
-         if ( is_admin() ) {
+        $this->set_constants();
+
+        if ( is_admin() ) {
             $this->load_plugin_textdomain();
             add_action('admin_init', array($this, 'create_roles'));
             include_once( 'includes/admin-screens.php' );
+            include_once( 'includes/admin-config.php' );
             include_once( 'includes/admin-addons.php' );
             include_once( 'includes/admin-warnings.php' );
             include_once( 'includes/admin-notices.php' );
-         }
+        }
 
         $this->search_tree = get_option( 'custom-css-js-tree' );
 
@@ -111,6 +106,7 @@ final class CustomCSSandJS {
             } else {
                 $action .= 'footer';
             }
+
             add_action( $action, array( $this, 'print_' . $_key ) );
         }
     }
@@ -119,6 +115,7 @@ final class CustomCSSandJS {
      * Print the custom code.
      */
     public function __call( $function, $args ) {
+
 
         if ( strpos( $function, 'print_' ) === false ) {
             return false;
@@ -153,7 +150,7 @@ final class CustomCSSandJS {
 
             foreach( $args as $_post_id ) {
                 if ( strstr( $_post_id, 'css' ) || strstr( $_post_id, 'js' ) ) {
-                    @include_once( $this->upload_dir . '/' . $_post_id );
+                    @include_once( CCJ_UPLOAD_DIR . '/' . $_post_id );
                 } else {
                     $post = get_post( $_post_id );
                     echo $before . $post->post_content . $after;
@@ -170,14 +167,14 @@ final class CustomCSSandJS {
             
             if ( strpos( $function, 'js' ) !== false ) {
                 foreach( $args as $_filename ) {
-                    echo PHP_EOL . "<script type='text/javascript' src='".$this->upload_url . '/' . $_filename."'></script>" . PHP_EOL;
+                    echo PHP_EOL . "<script type='text/javascript' src='".CCJ_UPLOAD_URL. '/' . $_filename."'></script>" . PHP_EOL;
                 }
             }
 
             if ( strpos( $function, 'css' ) !== false ) {
                 foreach( $args as $_filename ) {
                     $shortfilename = preg_replace( '@\.css\?v=.*$@', '', $_filename );
-                    echo PHP_EOL . "<link rel='stylesheet' id='".$shortfilename ."-css'  href='".$this->upload_url . '/' . $_filename ."' type='text/css' media='all' />" . PHP_EOL;
+                    echo PHP_EOL . "<link rel='stylesheet' id='".$shortfilename ."-css'  href='".CCJ_UPLOAD_URL. '/' . $_filename ."' type='text/css' media='all' />" . PHP_EOL;
                 }
             }
         }
@@ -192,6 +189,26 @@ final class CustomCSSandJS {
 
         }
     }
+
+
+    /**
+     * Set constants for later use
+     */
+    function set_constants() {
+        $dir = wp_upload_dir();
+        $constants = array(
+            'CCJ_VERSION'         => '3.13',
+            'CCJ_UPLOAD_DIR'      => $dir['basedir'] . '/custom-css-js', 
+            'CCJ_UPLOAD_URL'      => $dir['baseurl'] . '/custom-css-js', 
+            'CCJ_PLUGIN_FILE'     => __FILE__,
+        );
+        foreach( $constants as $_key => $_value ) {
+            if (!defined($_key)) {
+                define( $_key, $_value );
+            }
+        }
+    }
+
 
     /**
      * Create the custom-css-js post type

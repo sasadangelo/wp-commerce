@@ -9,14 +9,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * CustomCSSandJS_Admin 
+ * CustomCSSandJS_Admin
  */
 class CustomCSSandJS_Admin {
-
-    /**
-     * An instance of the CustomCSSandJS class
-     */
-    private $main = '';
 
     /**
      * Default options for a new page
@@ -40,8 +35,6 @@ class CustomCSSandJS_Admin {
     public function __construct() {
 
         $this->add_functions();
-
-        $this->main = CustomCSSandJS();
     }
 
     /**
@@ -59,26 +52,29 @@ class CustomCSSandJS_Admin {
 
         // Add actions
         $actions = array(
-            'admin_menu' => 'admin_menu',
-            'admin_enqueue_scripts' => 'admin_enqueue_scripts',
-            'current_screen' => 'current_screen',
-            'admin_notices' => 'create_uploads_directory',
-            'edit_form_after_title' => 'codemirror_editor',
-            'add_meta_boxes' => 'add_meta_boxes',
-            'save_post' => 'options_save_meta_box_data',
-            'trashed_post' => 'trash_post',
-            'untrashed_post' => 'trash_post',
-            'admin_post_ccj-autosave' => 'ajax_autosave',
-            'wp_loaded'             => 'compatibility_shortcoder',
-            'wp_ajax_ccj_active_code' => 'wp_ajax_ccj_active_code',
+            'admin_menu'                => 'admin_menu',
+            'admin_enqueue_scripts'     => 'admin_enqueue_scripts',
+            'current_screen'            => 'current_screen',
+            'admin_notices'             => 'create_uploads_directory',
+            'edit_form_after_title'     => 'codemirror_editor',
+            'add_meta_boxes'            => 'add_meta_boxes',
+            'save_post'                 => 'options_save_meta_box_data',
+            'trashed_post'              => 'trash_post',
+            'untrashed_post'            => 'trash_post',
+            'wp_loaded'                 => 'compatibility_shortcoder',
+            'wp_ajax_ccj_active_code'   => 'wp_ajax_ccj_active_code',
+            'post_submitbox_start'      => 'post_submitbox_start',
+            'restrict_manage_posts'     => 'restrict_manage_posts',
         );
         foreach( $actions as $_key => $_value ) {
             add_action( $_key, array( $this, $_value ) );
         }
 
-
-        // Add some custom actions
+        // Add some custom actions/filters
         add_action( 'manage_custom-css-js_posts_custom_column', array( $this, 'manage_posts_columns' ), 10, 2 );
+        add_filter( 'manage_edit-custom-css-js_sortable_columns', array( $this, 'manage_edit_posts_sortable_columns' ) );
+        add_filter( 'post_row_actions', array( $this, 'post_row_actions' ), 10, 2 );
+        add_filter( 'parse_query', array($this, 'parse_query') , 10);
     }
 
 
@@ -111,45 +107,54 @@ class CustomCSSandJS_Admin {
         $screen = get_current_screen();
 
         // Only for custom-css-js post type
-        if ( $screen->post_type != 'custom-css-js' ) 
+        if ( $screen->post_type != 'custom-css-js' )
             return false;
 
         // Some handy variables
-        $a = plugins_url( '/', $this->main->plugin_file ). 'assets';
+        $a = plugins_url( '/', CCJ_PLUGIN_FILE). 'assets';
         $cm = $a . '/codemirror';
         $v = CCJ_VERSION;
 
-        wp_register_script( 'ccj_admin', $a . '/ccj_admin.js', array('jquery', 'jquery-ui-resizable'), $v, false );
-        wp_localize_script( 'ccj_admin', 'CCJ', $this->cm_localize() );
-        wp_enqueue_script( 'ccj_admin' );
-        wp_enqueue_style( 'ccj_admin', $a . '/ccj_admin.css', array(), $v );
+        wp_register_script( 'ccj-admin', $a . '/ccj_admin.js', array('jquery', 'jquery-ui-resizable'), $v, false );
+        wp_localize_script( 'ccj-admin', 'CCJ', $this->cm_localize() );
+        wp_enqueue_script( 'ccj-admin' );
+        wp_enqueue_style( 'ccj-admin', $a . '/ccj_admin.css', array(), $v );
 
-       
+
         // Only for the new/edit Code's page
-        if ( $hook == 'post-new.php' || $hook == 'post.php' ) { 
+        if ( $hook == 'post-new.php' || $hook == 'post.php' ) {
             wp_enqueue_style( 'jquery-ui', 'https://code.jquery.com/ui/1.12.0/themes/base/jquery-ui.css', array(), $v );
-            wp_enqueue_script( 'ccj_codemirror', $cm . '/codemirror-compressed.js', array( 'jquery' ), $v, false);
-            wp_enqueue_style( 'ccj_codemirror', $cm . '/codemirror-compressed.css', array(), $v );
-            wp_enqueue_script( 'ccj_admin_url_rules', $a . '/ccj_admin-url_rules.js', array('jquery'), $v, false );
-            wp_enqueue_script( 'ccj_scrollbars', $cm . '/addon/scroll/simplescrollbars.js', array('ccj_codemirror'), $v, false );
-            wp_enqueue_style( 'ccj_scrollbars', $cm . '/addon/scroll/simplescrollbars.css', array(), $v );
+            wp_enqueue_script( 'ccj-codemirror', $cm . '/lib/codemirror.js', array( 'jquery' ), $v, false);
+            wp_enqueue_style( 'ccj-codemirror', $cm . '/lib/codemirror.css', array(), $v );
+            wp_enqueue_script( 'ccj-admin_url_rules', $a . '/ccj_admin-url_rules.js', array('jquery'), $v, false );
+            wp_enqueue_script( 'ccj-scrollbars', $cm . '/addon/scroll/simplescrollbars.js', array('ccj-codemirror'), $v, false );
+            wp_enqueue_style( 'ccj-scrollbars', $cm . '/addon/scroll/simplescrollbars.css', array(), $v );
 
             // Add the language modes
             $cmm = $cm . '/mode/';
-            wp_enqueue_script('cm-xml', $cmm . 'xml/xml.js',               array('ccj_codemirror'), $v, false);
-            wp_enqueue_script('cm-js', $cmm . 'javascript/javascript.js',  array('ccj_codemirror'), $v, false);
-            wp_enqueue_script('cm-css', $cmm . 'css/css.js',               array('ccj_codemirror'), $v, false);
-            wp_enqueue_script('cm-htmlmixed', $cmm . 'htmlmixed/htmlmixed.js', array('ccj_codemirror'), $v, false);
+            wp_enqueue_script('cm-xml', $cmm . 'xml/xml.js',               array('ccj-codemirror'), $v, false);
+            wp_enqueue_script('cm-js', $cmm . 'javascript/javascript.js',  array('ccj-codemirror'), $v, false);
+            wp_enqueue_script('cm-css', $cmm . 'css/css.js',               array('ccj-codemirror'), $v, false);
+            wp_enqueue_script('cm-htmlmixed', $cmm . 'htmlmixed/htmlmixed.js', array('ccj-codemirror'), $v, false);
 
             $cma = $cm . '/addon/';
-            wp_enqueue_script('cm-dialog', $cma . 'dialog.js', array('ccj_codemirror'), $v, false);
-            wp_enqueue_script('cm-search', $cma . 'search.js', array('ccj_codemirror'), $v, false);
-            wp_enqueue_script('cm-searchcursor', $cma . 'searchcursor.js',array('ccj_codemirror'), $v, false);
-            wp_enqueue_script('cm-jump-to-line', $cma . 'jump-to-line.js', array('ccj_codemirror'), $v, false);
-            wp_enqueue_style('cm-matchesonscrollbar', $cma . 'matchesonscrollbar.css', array(), $v );
-            wp_enqueue_style('cm-dialog', $cma . 'dialog.css', array(), $v );
-            wp_enqueue_style('cm-matchesonscrollbar', $cma . 'matchesonscrollbar.css', array(), $v );
+            wp_enqueue_script('cm-dialog', $cma . 'dialog/dialog.js', array('ccj-codemirror'), $v, false);
+            wp_enqueue_script('cm-search', $cma . 'search/search.js', array('ccj-codemirror'), $v, false);
+            wp_enqueue_script('cm-searchcursor', $cma . 'search/searchcursor.js',array('ccj-codemirror'), $v, false);
+            wp_enqueue_script('cm-jump-to-line', $cma . 'search/jump-to-line.js', array('ccj-codemirror'), $v, false);
+            wp_enqueue_style('cm-dialog', $cma . 'dialog/dialog.css', array(), $v );
 
+            // remove the assets from other plugins so it doesn't interfere with CodeMirror
+            global $wp_scripts;
+            if (is_array($wp_scripts->registered) && count($wp_scripts->registered) != 0) {
+              foreach($wp_scripts->registered as $_key => $_value) {
+                if (!isset($_value->src)) continue;
+
+                if (strstr($_value->src, 'wp-content/plugins') !== false && strstr($_value->src, 'plugins/custom-css-js/assets') === false) {
+                  unset($wp_scripts->registered[$_key]);
+                }
+              }
+            }
 
         }
     }
@@ -160,8 +165,14 @@ class CustomCSSandJS_Admin {
      */
     public function cm_localize() {
 
-        $vars = array( 
-            'scroll' => '1'
+        $vars = array(
+            'scroll' => '1',
+            'active' => __('Active', 'custom-css-js'),
+            'inactive' => __('Inactive', 'custom-css-js'),
+            'activate' => __('Activate', 'custom-css-js'),
+            'deactivate' => __('Deactivate', 'custom-css-js'),
+            'active_title' => __('The code is active. Click to deactivate it', 'custom-css-js'),
+            'deactive_title' => __('The code is inactive. Click to activate it', 'custom-css-js'),
         );
 
         if ( ! function_exists( 'is_plugin_active' ) ) {
@@ -188,7 +199,7 @@ class CustomCSSandJS_Admin {
 
     public function add_meta_boxes() {
         add_meta_box('custom-code-options', __('Options', 'custom-css-js'), array( $this, 'custom_code_options_meta_box_callback'), 'custom-css-js', 'side', 'low');
-        
+
         remove_meta_box( 'slugdiv', 'custom-css-js', 'normal' );
     }
 
@@ -224,7 +235,7 @@ class CustomCSSandJS_Admin {
         }
 
         if ( $current_screen->base == 'post' ) {
-            add_action( 'admin_head', array( $this, 'current_screen_post' ) ); 
+            add_action( 'admin_head', array( $this, 'current_screen_post' ) );
         }
 
         if ( $current_screen->base == 'edit' ) {
@@ -302,23 +313,88 @@ class CustomCSSandJS_Admin {
                 $h_time = mysql2date( __( 'Y/m/d' ), $m_time );
             }
 
-            echo $h_time; 
+            echo $h_time;
         }
 
         if ( $column == 'active' ) {
-            $url = wp_nonce_url( admin_url( 'admin-ajax.php?action=ccj_active_code&code_id=' . $post_id ), 'ccj-active-code' );
-            echo '<a href="' . esc_url( $url ) . '" title="'. __( 'Toggle active', 'custom-css-js' ) . '">';
+            $url = wp_nonce_url( admin_url( 'admin-ajax.php?action=ccj_active_code&code_id=' . $post_id ), 'ccj-active-code-' .$post_id );
             if ( $this->is_active( $post_id ) ) {
                 $active_title = __('The code is active. Click to deactivate it', 'custom-css-js');
-                echo '<span class="dashicons dashicons-star-filled" title="'.$active_title.'"></span>';
+                $active_icon = 'dashicons-star-filled';
             } else {
                 $active_title = __('The code is inactive. Click to activate it', 'custom-css-js');
-                echo '<span class="dashicons dashicons-star-empty ccj_row" title="'.$active_title.'"></span>';
+                $active_icon = 'dashicons-star-empty ccj_row';
             }
-            echo '</a>';
-
+            echo '<a href="' . esc_url( $url ) . '" class="ccj_activate_deactivate" data-code-id="'.$post_id.'" title="'.$active_title . '">' .
+                '<span class="dashicons '.$active_icon.'"></span>'.
+                '</a>';
         }
     }
+
+
+    /**
+     * Make the 'Modified' column sortable
+     */
+    function manage_edit_posts_sortable_columns( $columns ) {
+        $columns['modified'] = 'modified';
+        return $columns;
+        
+    }
+
+
+    /**
+     * List table: Change the query in order to filter by code type 
+     */
+    function parse_query( $query ){
+        if ( !is_admin() || !$query->is_main_query() ){ 
+          return $query;
+        }
+
+        if ( 'custom-css-js' !== $query->query['post_type'] ) { 
+          return $query;
+        }
+
+        $filter = filter_input( INPUT_GET, 'language_filter' );
+        if ( !is_string($filter) || strlen($filter) == 0 ) {
+            return $query;
+        }
+
+        global $wpdb;
+        $post_id_query = "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value LIKE %s";
+        $post_ids = $wpdb->get_col( $wpdb->prepare($post_id_query, 'options', '%'.$filter.'%') );
+        if ( !is_array($post_ids) || count($post_ids) == 0 ) {
+            $post_ids = array(-1);
+        }
+        $query->query_vars['post__in'] = $post_ids; 
+
+        return $query;
+    }
+
+
+    /**
+     * List table: add a filter by code type 
+     */
+    function restrict_manage_posts( $post_type ) {
+        if('custom-css-js' !== $post_type){
+            return; 
+        }
+
+        $languages = array(
+            'css'       => __('CSS Codes', 'custom-cs-js'),
+            'js'        => __('JS Codes', 'custom-css-js'),
+            'html'      => __('HTML Codes', 'custom-css-js'),
+        );
+
+		echo '<label class="screen-reader-text" for="custom-css-js-filter">' . esc_html__( 'Filter Code Type', 'custom-css-js' ) . '</label>';
+		echo '<select name="language_filter" id="custom-css-js-filter">';
+        echo '<option  value="">' . __('All Custom Codes', 'custom-css-js'). '</option>';
+		foreach ( $languages as $_lang => $_label ) {
+			$selected = selected( filter_input( INPUT_GET, 'language_filter' ), $_lang, false ); ;
+            echo '<option ' . $selected . ' value="' . $_lang. '">' . $_label . '</option>';
+		}
+		echo '</select>';
+    }
+
 
     /**
      * Activate/deactivate a code
@@ -328,21 +404,24 @@ class CustomCSSandJS_Admin {
     function wp_ajax_ccj_active_code() {
         if ( ! isset( $_GET['code_id'] ) ) die();
 
-		if ( check_admin_referer( 'ccj-active-code' ) ) {
-			$code_id = absint( $_GET['code_id'] );
+        $code_id = absint( $_GET['code_id'] );
+
+        $response = 'error';
+		if ( check_admin_referer( 'ccj-active-code-' . $code_id) ) {
 
 			if ( 'custom-css-js' === get_post_type( $code_id ) ) {
                 $active = get_post_meta($code_id, '_active', true );
                 if ( $active === false || $active === '' ) {
                     $active = 'yes';
                 }
+                $response = $active;
 				update_post_meta( $code_id, '_active', $active === 'yes' ? 'no' : 'yes' );
 
                 $this->build_search_tree();
 			}
 		}
+        echo $response;
 
-		wp_safe_redirect( wp_get_referer() ? remove_query_arg( array( 'trashed', 'untrashed', 'deleted', 'ids' ), wp_get_referer() ) : admin_url( 'edit.php?post_type=custom-css-js' ) );
 		die();
     }
 
@@ -367,7 +446,7 @@ class CustomCSSandJS_Admin {
                 h1 += '<a href="post-new.php?post_type=custom-css-js&language=css" class="page-title-action"><?php _e('Add CSS Code', 'custom-css-js'); ?></a>';
                 h1 += '<a href="post-new.php?post_type=custom-css-js&language=js" class="page-title-action"><?php _e('Add JS Code', 'custom-css-js'); ?></a>';
                 h1 += '<a href="post-new.php?post_type=custom-css-js&language=html" class="page-title-action"><?php _e('Add HTML Code', 'custom-css-js'); ?></a>';
-                $("#wpbody-content h1").html(h1); 
+                $("#wpbody-content h1").html(h1);
             });
 
         </script>
@@ -381,7 +460,16 @@ class CustomCSSandJS_Admin {
     function current_screen_post() {
 
         $this->remove_unallowed_metaboxes();
-    
+
+        $strings = array(
+            'Add CSS Code' => __('Add CSS Code', 'custom-css-js'),
+            'Add JS Code' => __('Add JS Code', 'custom-css-js'),
+            'Add HTML Code' => __('Add HTML Code', 'custom-css-js'),
+            'Edit CSS Code' => __('Edit CSS Code', 'custom-css-js'),
+            'Edit JS Code' => __('Edit JS Code', 'custom-css-js'),
+            'Edit HTML Code' => __('Edit HTML Code', 'custom-css-js'),
+        );
+
         if ( isset( $_GET['post'] ) ) {
             $action = 'Edit';
             $post_id = esc_attr($_GET['post']);
@@ -391,7 +479,8 @@ class CustomCSSandJS_Admin {
         }
         $language = $this->get_language($post_id);
 
-        $title = $action . ' ' . strtoupper( $language ) . ' code';
+        $title = $action . ' ' . strtoupper( $language ) . ' Code';
+        $title = (isset($strings[$title])) ? $strings[$title] : $strings['Add CSS Code'];
 
         if ( $action == 'Edit' ) {
             $title .= ' <a href="post-new.php?post_type=custom-css-js&language=css" class="page-title-action">'.__('Add CSS Code', 'custom-css-js') .'</a> ';
@@ -406,9 +495,9 @@ class CustomCSSandJS_Admin {
                 $("#wpbody-content h1").html('<?php echo $title; ?>');
                 $("#message.updated.notice").html('<p><?php _e('Code updated', 'custom-css-js'); ?></p>');
 
-                var from_top = -$("#normal-sortables").height(); 
+                var from_top = -$("#normal-sortables").height();
                 if ( from_top != 0 ) {
-                    $(".ccj_only_premium-first").css('margin-top', from_top.toString() + 'px' ); 
+                    $(".ccj_only_premium-first").css('margin-top', from_top.toString() + 'px' );
                 } else {
                     $(".ccj_only_premium-first").hide();
                 }
@@ -441,7 +530,7 @@ class CustomCSSandJS_Admin {
         $allowed = apply_filters( 'custom-css-js-meta-boxes', $allowed );
 
         foreach( $wp_meta_boxes['custom-css-js']['side'] as $_priority => $_boxes ) {
-            foreach( $_boxes as $_key => $_value ) { 
+            foreach( $_boxes as $_key => $_value ) {
             if ( ! in_array( $_key, $allowed ) ) {
                 unset( $wp_meta_boxes['custom-css-js']['side'][$_priority][$_key] );
             }
@@ -454,12 +543,15 @@ class CustomCSSandJS_Admin {
         $allowed = apply_filters( 'custom-css-js-meta-boxes-normal', $allowed );
 
         foreach( $wp_meta_boxes['custom-css-js']['normal'] as $_priority => $_boxes ) {
-            foreach( $_boxes as $_key => $_value ) { 
+            foreach( $_boxes as $_key => $_value ) {
             if ( ! in_array( $_key, $allowed ) ) {
                 unset( $wp_meta_boxes['custom-css-js']['normal'][$_priority][$_key] );
             }
             }
         }
+
+
+        unset($wp_meta_boxes['custom-css-js']['advanced']);
     }
 
 
@@ -484,16 +576,43 @@ class CustomCSSandJS_Admin {
         }
         $language = $this->get_language($post_id);
 
+        $settings = get_option( 'ccj_settings' );
+
+
+        // Replace the htmlentities (https://wordpress.org/support/topic/annoying-bug-in-text-editor/), but only selectively
+        if ( isset($settings['ccj_htmlentities']) && $settings['ccj_htmlentities'] == 1 && strstr($post->post_content, '&') ) {
+
+            // First the ampresands
+            $post->post_content = str_replace('&amp', htmlentities('&amp'), $post->post_content );
+
+            // Then the rest of the entities
+            $entities = get_html_translation_table(HTML_ENTITIES, ENT_QUOTES | ENT_HTML5 );
+            unset( $entities[ array_search('&amp;', $entities) ]);
+            $regular_expression = str_replace(';', '', '/('.implode('|', $entities).')/i');
+            preg_match_all($regular_expression, $post->post_content, $matches);
+            if ( isset($matches[0]) && count($matches[0]) > 0 ) {
+                foreach($matches[0] as $_entity) {
+                    $post->post_content = str_replace($_entity, htmlentities($_entity), $post->post_content);
+                }
+            }
+        }
+
         switch ( $language ) {
             case 'js' :
                 if ( $new_post ) {
                     $post->post_content = __('/* Add your JavaScript code here.
-                     
+
 If you are using the jQuery library, then don\'t forget to wrap your code inside jQuery.ready() as follows:
 
 jQuery(document).ready(function( $ ){
-    // Your code in here 
+    // Your code in here
 });
+
+--
+
+If you want to link a JavaScript file that resides on another server (similar to
+<script src="https://example.com/your-js-file.js"></script>), then please use
+the "Add HTML Code" page, as this is a HTML code that links a JavaScript file.
 
 End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
                 }
@@ -503,7 +622,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
                 break;
             case 'html' :
                 if ( $new_post ) {
-                    $post->post_content = __('<!-- Add HTML code to the header or the footer. 
+                    $post->post_content = __('<!-- Add HTML code to the header or the footer.
 
 For example, you can use the following code for loading the jQuery library from Google CDN:
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
@@ -530,7 +649,7 @@ or the following one for loading the Bootstrap library from MaxCDN:
             default :
                 if ( $new_post ) {
                     $post->post_content = __('/* Add your CSS code here.
-                     
+
 For example:
 .example {
     color: red;
@@ -545,7 +664,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
                 $code_mirror_before = '<style type="text/css">';
                 $code_mirror_after = '</style>';
 
-        } 
+        }
 
             ?>
               <form style="position: relative; margin-top: .5em;">
@@ -554,10 +673,27 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
                 <textarea class="wp-editor-area" id="content" mode="<?php echo htmlentities($code_mirror_mode); ?>" name="content"><?php echo $post->post_content; ?></textarea>
                 <div class="code-mirror-after"><div><?php echo htmlentities( $code_mirror_after );?></div></div>
 
+                <table id="post-status-info"><tbody><tr>
+                    <td class="autosave-info">
+                    <span class="autosave-message">&nbsp;</span>
+                <?php
+                    if ( 'auto-draft' != $post->post_status ) {
+                        echo '<span id="last-edit">';
+                    if ( $last_user = get_userdata( get_post_meta( $post->ID, '_edit_last', true ) ) ) {
+                        printf(__('Last edited by %1$s on %2$s at %3$s', 'custom-css-js-pro'), esc_html( $last_user->display_name ), mysql2date(get_option('date_format'), $post->post_modified), mysql2date(get_option('time_format'), $post->post_modified));
+                    } else {
+                        printf(__('Last edited on %1$s at %2$s', 'custom-css-js-pro'), mysql2date(get_option('date_format'),      $post->post_modified), mysql2date(get_option('time_format'), $post->post_modified));
+                    }
+                    echo '</span>';
+                } ?>
+                    </td>
+                </tr></tbody></table>
+
+
                 <input type="hidden" id="update-post_<?php echo $post->ID ?>" value="<?php echo wp_create_nonce('update-post_'. $post->ID ); ?>" />
               </form>
     <?php
- 
+
     }
 
 
@@ -568,7 +704,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
     function custom_code_options_meta_box_callback( $post ) {
 
             $options = $this->get_options( $post->ID );
-            if ( ! isset($options['preprocessor'] ) ) 
+            if ( ! isset($options['preprocessor'] ) )
                 $options['preprocessor'] = 'none';
 
 
@@ -589,11 +725,11 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             <?php
 
             $output = '';
-            
+
             foreach( $meta as $_key => $a ) {
                 $close_div = false;
 
-                if ( ($_key == 'preprocessor' && $options['language'] == 'css') || 
+                if ( ($_key == 'preprocessor' && $options['language'] == 'css') ||
                     ($_key == 'linking' && $options['language'] == 'html') ||
                     $_key == 'priority' ||
                     $_key == 'minify' ) {
@@ -603,7 +739,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
 
                 // Don't show Pre-processors for JavaScript Codes
                 if ( $options['language'] == 'js' && $_key == 'preprocessor' ) {
-                    continue;   
+                    continue;
                 }
 
                 $output .= '<h3>' . $a['title'] . '</h3>' . PHP_EOL;
@@ -627,7 +763,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             </div>
 
             <div class="ccj_only_premium ccj_only_premium-right">
-                <div> 
+                <div>
                 <a href="https://www.silkypress.com/simple-custom-css-js-pro/?utm_source=wordpress&utm_campaign=ccj_free&utm_medium=banner" target="_blank"><?php _e('Available only in <br />Simple Custom CSS and JS Pro', 'custom-css-js'); ?></a>
                 </div>
             </div>
@@ -849,7 +985,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             'type'  => 'header',
             'linking'   => 'internal',
             'priority'  => 5,
-            'side'  => 'frontend', 
+            'side'  => 'frontend',
             'language' => 'css',
         );
 
@@ -857,7 +993,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             $defaults = array(
                 'type'  => 'header',
                 'linking'   => 'both',
-                'side'  => 'frontend', 
+                'side'  => 'frontend',
                 'language' => 'html',
                 'priority'  => 5,
             );
@@ -874,11 +1010,17 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             return;
         }
 
+        if ( $options['language'] == 'js' ) {
+            if ( preg_match('@/\* Add your JavaScript code here[\s\S]*?End of comment \*/@im', $_POST['content'] ) ) {
+                $_POST['content'] = preg_replace('@/\* Add your JavaScript code here[\s\S]*?End of comment \*/@im', '/* Default comment here */', $_POST['content']);
+            }
+        }
+
 
         // Save the Custom Code in a file in `wp-content/uploads/custom-css-js`
         if ( $options['linking'] == 'internal' ) {
-                
-            $before = '<!-- start Simple Custom CSS and JS -->' . PHP_EOL; 
+
+            $before = '<!-- start Simple Custom CSS and JS -->' . PHP_EOL;
             $after = '<!-- end Simple Custom CSS and JS -->' . PHP_EOL;
             if ( $options['language'] == 'css' ) {
                 $before .= '<style type="text/css">' . PHP_EOL;
@@ -886,23 +1028,26 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             }
             if ( $options['language'] == 'js' ) {
                 if ( ! preg_match( '/<script\b[^>]*>([\s\S]*?)<\/script>/im', $_POST['content'] ) ) {
-                $before .= '<script type="text/javascript">' . PHP_EOL;
-                $after = '</script>' . PHP_EOL . $after;
+                    $before .= '<script type="text/javascript">' . PHP_EOL;
+                    $after = '</script>' . PHP_EOL . $after;
+                } else {
+                    // the content has a <script> tag, then remove the comments so they don't show up on the frontend
+                    $_POST['content'] = preg_replace('@/\*[\s\S]*?\*/@', '', $_POST['content']);
                 }
             }
         }
 
         if ( $options['linking'] == 'external' ) {
             $before = '/******* Do not edit this file *******' . PHP_EOL .
-            'Simple Custom CSS and JS - by Silkypress.com' . PHP_EOL . 
+            'Simple Custom CSS and JS - by Silkypress.com' . PHP_EOL .
             'Saved: '.date('M d Y | H:i:s').' */' . PHP_EOL;
         }
 
-        if ( wp_is_writable( $this->main->upload_dir ) ) {
+        if ( wp_is_writable( CCJ_UPLOAD_DIR ) ) {
             $file_name = $post_id . '.' . $options['language'];
             $file_content = $before . stripslashes($_POST['content']) . $after;
-            @file_put_contents( $this->main->upload_dir . '/' . $file_name , $file_content );
-        } 
+            @file_put_contents( CCJ_UPLOAD_DIR . '/' . $file_name , $file_content );
+        }
 
 
         $this->build_search_tree();
@@ -923,7 +1068,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             return false;
         }
 
-        $dir = $this->main->upload_dir;
+        $dir = CCJ_UPLOAD_DIR;
 
         // Create the dir if it doesn't exist
         if ( ! file_exists( $dir ) ) {
@@ -933,16 +1078,16 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
         // Show a message if it couldn't create the dir
         if ( ! file_exists( $dir ) ) : ?>
              <div class="notice notice-error is-dismissible">
-             <p><?php printf(__('The %s directory could not be created', 'custom-css-js'), '<b>custom-css-js</b>'); ?></p> 
+             <p><?php printf(__('The %s directory could not be created', 'custom-css-js'), '<b>custom-css-js</b>'); ?></p>
              <p><?php _e('Please run the following commands in order to make the directory', 'custom-css-js'); ?>: <br /><strong>mkdir <?php echo $dir; ?>; </strong><br /><strong>chmod 777 <?php echo $dir; ?>;</strong></p>
             </div>
         <?php return; endif;
- 
+
 
         // Show a message if the dir is not writable
         if ( ! wp_is_writable( $dir ) ) : ?>
              <div class="notice notice-error is-dismissible">
-             <p><?php printf(__('The %s directory is not writable, therefore the CSS and JS files cannot be saved.', 'custom-css-js'), '<b>'.$dir.'</b>'); ?></p> 
+             <p><?php printf(__('The %s directory is not writable, therefore the CSS and JS files cannot be saved.', 'custom-css-js'), '<b>'.$dir.'</b>'); ?></p>
              <p><?php _e('Please run the following command to make the directory writable', 'custom-css-js'); ?>:<br /><strong>chmod 777 <?php echo $dir; ?> </strong></p>
             </div>
         <?php return; endif;
@@ -950,20 +1095,20 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
 
         // Write a blank index.php
         if ( ! file_exists( $dir. '/index.php' ) ) {
-            $content = '<?php' . PHP_EOL . '// Silence is golden.'; 
+            $content = '<?php' . PHP_EOL . '// Silence is golden.';
             @file_put_contents( $dir. '/index.php', $content );
         }
     }
 
 
     /**
-     * Build a tree where you can quickly find the needed custom-css-js posts 
+     * Build a tree where you can quickly find the needed custom-css-js posts
      *
      * @return void
      */
     private function build_search_tree() {
 
-        // Retrieve all the custom-css-js codes 
+        // Retrieve all the custom-css-js codes
         $posts = query_posts( 'post_type=custom-css-js&post_status=publish&nopaging=true' );
 
         $tree = array();
@@ -973,18 +1118,18 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             }
 
             $options = $this->get_options( $_post->ID );
-            
+
             // Get the branch name, example: frontend-css-header-external
             $tree_branch = $options['side'] . '-' .$options['language'] . '-' . $options['type'] . '-' . $options['linking'];
 
             $filename = $_post->ID . '.' . $options['language'];
 
             if ( $options['linking'] == 'external' ) {
-                $filename .= '?v=' . rand(1, 10000); 
+                $filename .= '?v=' . rand(1, 10000);
             }
 
             // Add the code file to the tree branch
-            $tree[ $tree_branch ][] = $filename; 
+            $tree[ $tree_branch ][] = $filename;
 
         }
 
@@ -1058,7 +1203,7 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             foreach( $a['values'] as $__key => $__value ) {
                 $selected = ( isset($options[$_key]) && $options[$_key] == $__key) ? ' selected="selected"' : '';
                 $output .= '<option value="'.$__key.'"'.$selected.'>' . $__value . '</option>' . PHP_EOL;
-            } 
+            }
             $output .= '</select>' . PHP_EOL;
             $output .= '</div>' . PHP_EOL;
         }
@@ -1083,6 +1228,62 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
 
         return $language;
     }
+
+
+    /**
+     * Show the activate/deactivate link in the row's action area
+     */
+    function post_row_actions($actions, $post) {
+        if ( 'custom-css-js' !== $post->post_type ) {
+            return $actions;
+        }
+
+        $url = wp_nonce_url( admin_url( 'admin-ajax.php?action=ccj_active_code&code_id=' . $post->ID), 'ccj-active-code-'. $post->ID );
+        if ( $this->is_active( $post->ID) ) {
+            $active_title = __('The code is active. Click to deactivate it', 'custom-css-js');
+            $active_text = __('Deactivate', 'custom-css-js');
+        } else {
+            $active_title = __('The code is inactive. Click to activate it', 'custom-css-js');
+            $active_text = __('Activate', 'custom-css-js');
+        }
+        $actions['activate'] = '<a href="' . esc_url( $url ) . '" title="'. $active_title . '" class="ccj_activate_deactivate" data-code-id="'.$post->ID.'">' . $active_text . '</a>';
+
+        return $actions;
+    }
+
+
+    /**
+    * Show the activate/deactivate link in admin.
+    */
+    public function post_submitbox_start() {
+        global $post;
+
+        if ( ! is_object( $post ) ) return;
+
+        if ( 'custom-css-js' !== $post->post_type ) return;
+
+        if ( !isset( $_GET['post'] ) ) return;
+
+        $url = wp_nonce_url( admin_url( 'admin-ajax.php?action=ccj_active_code&code_id=' . $post->ID), 'ccj-active-code-'. $post->ID );
+
+
+        if ( $this->is_active( $post->ID) ) {
+            $text = __('Active', 'custom-css-js');
+            $action = __('Deactivate', 'custom-css-js');
+        } else {
+            $text = __('Inactive', 'custom-css-js');
+            $action = __('Activate', 'custom-css-js');
+        }
+        ?>
+        <div id="activate-action"><span style="font-weight: bold;"><?php echo $text; ?></span>
+        (<a class="ccj_activate_deactivate" data-code-id="<?php echo $post->ID; ?>" href="<?php echo esc_url( $url ); ?>"><?php echo $action ?></a>)
+        </div>
+    <?php
+    }
+
+
+
+
 }
 
 return new CustomCSSandJS_Admin();

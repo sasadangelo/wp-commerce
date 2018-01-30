@@ -147,6 +147,7 @@ class WC_Gateway_PPEC_Plugin {
 		add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
 
 		add_filter( 'plugin_action_links_' . plugin_basename( $this->file ), array( $this, 'plugin_action_links' ) );
+		add_action( 'wp_ajax_ppec_dismiss_notice_message', array( $this, 'ajax_dismiss_notice' ) );
 	}
 
 	public function bootstrap() {
@@ -164,7 +165,6 @@ class WC_Gateway_PPEC_Plugin {
 			delete_option( 'wc_gateway_ppce_prompt_to_connect' );
 		} catch ( Exception $e ) {
 			if ( in_array( $e->getCode(), array( self::ALREADY_BOOTSTRAPED, self::DEPENDENCIES_UNSATISFIED ) ) ) {
-
 				update_option( 'wc_gateway_ppce_bootstrap_warning_message', $e->getMessage() );
 			}
 
@@ -178,26 +178,71 @@ class WC_Gateway_PPEC_Plugin {
 
 	public function show_bootstrap_warning() {
 		$dependencies_message = get_option( 'wc_gateway_ppce_bootstrap_warning_message', '' );
-		if ( ! empty( $dependencies_message ) ) {
+		if ( ! empty( $dependencies_message ) && 'yes' !== get_option( 'wc_gateway_ppec_bootstrap_warning_message_dismissed', 'no' ) ) {
 			?>
-			<div class="error fade">
+			<div class="notice notice-warning is-dismissible ppec-dismiss-bootstrap-warning-message">
 				<p>
 					<strong><?php echo esc_html( $dependencies_message ); ?></strong>
 				</p>
 			</div>
+			<script>
+			( function( $ ) {
+				$( '.ppec-dismiss-bootstrap-warning-message' ).on( 'click', '.notice-dismiss', function() {
+					jQuery.post( "<?php echo admin_url( 'admin-ajax.php' ); ?>", {
+						action: "ppec_dismiss_notice_message",
+						dismiss_action: "ppec_dismiss_bootstrap_warning_message",
+						nonce: "<?php echo esc_js( wp_create_nonce( 'ppec_dismiss_notice' ) ); ?>"
+					} );
+				} );
+			} )( jQuery );
+			</script>
 			<?php
 		}
 
 		$prompt_connect = get_option( 'wc_gateway_ppce_prompt_to_connect', '' );
-		if ( ! empty( $prompt_connect ) ) {
+		if ( ! empty( $prompt_connect ) && 'yes' !== get_option( 'wc_gateway_ppec_prompt_to_connect_message_dismissed', 'no' ) ) {
 			?>
-			<div class="notice notice-warning">
+			<div class="notice notice-warning is-dismissible ppec-dismiss-prompt-to-connect-message">
 				<p>
 					<strong><?php echo wp_kses( $prompt_connect, array( 'a' => array( 'href' => array() ) ) ); ?></strong>
 				</p>
 			</div>
+			<script>
+			( function( $ ) {
+				$( '.ppec-dismiss-prompt-to-connect-message' ).on( 'click', '.notice-dismiss', function() {
+					jQuery.post( "<?php echo admin_url( 'admin-ajax.php' ); ?>", {
+						action: "ppec_dismiss_notice_message",
+						dismiss_action: "ppec_dismiss_prompt_to_connect",
+						nonce: "<?php echo esc_js( wp_create_nonce( 'ppec_dismiss_notice' ) ); ?>"
+					} );
+				} );
+			} )( jQuery );
+			</script>
 			<?php
 		}
+	}
+
+	/**
+	 * AJAX handler for dismiss notice action.
+	 *
+	 * @since 1.4.7
+	 * @version 1.4.7
+	 */
+	public function ajax_dismiss_notice() {
+		if ( empty( $_POST['dismiss_action'] ) ) {
+			return;
+		}
+
+		check_ajax_referer( 'ppec_dismiss_notice', 'nonce' );
+		switch ( $_POST['dismiss_action'] ) {
+			case 'ppec_dismiss_bootstrap_warning_message':
+				update_option( 'wc_gateway_ppec_bootstrap_warning_message_dismissed', 'yes' );
+				break;
+			case 'ppec_dismiss_prompt_to_connect':
+				update_option( 'wc_gateway_ppec_prompt_to_connect_message_dismissed', 'yes' );
+				break;
+		}
+		wp_die();
 	}
 
 	/**
@@ -223,7 +268,7 @@ class WC_Gateway_PPEC_Plugin {
 			throw new Exception( $openssl_warning, self::DEPENDENCIES_UNSATISFIED );
 		}
 
-		preg_match( '/^OpenSSL ([\d.]+)/', OPENSSL_VERSION_TEXT, $matches );
+		preg_match( '/^(?:Libre|Open)SSL ([\d.]+)/', OPENSSL_VERSION_TEXT, $matches );
 		if ( empty( $matches[1] ) ) {
 			throw new Exception( $openssl_warning, self::DEPENDENCIES_UNSATISFIED );
 		}
@@ -374,7 +419,8 @@ class WC_Gateway_PPEC_Plugin {
 	}
 
 	/**
-	 * Check if shipping is needed for PayPal.
+	 * Check if shipping is needed for PayPal. This only checks for virtual products (#286),
+	 * but skips the check if there are no shipping methods enabled (#249).
 	 *
 	 * @since 1.4.1
 	 * @version 1.4.1
@@ -382,12 +428,18 @@ class WC_Gateway_PPEC_Plugin {
 	 * @return bool
 	 */
 	public static function needs_shipping() {
-		// In case there are no shipping methods defined, we still return true (see #249)
-		if ( ! wc_shipping_enabled() || 0 === wc_get_shipping_method_count( true ) ) {
-			return true;
+		$cart_contents  = WC()->cart->cart_contents;
+		$needs_shipping = false;
+
+		if ( ! empty( $cart_contents ) ) {
+			foreach ( $cart_contents as $cart_item_key => $values ) {
+				if ( $values['data']->needs_shipping() ) {
+					$needs_shipping = true;
+					break;
+				}
+			}
 		}
 
-		// Otherwise go through all items and see if they require shipping (e.g. virtual items will not, see #286)
-		return WC()->cart->needs_shipping();
+		return apply_filters( 'woocommerce_cart_needs_shipping', $needs_shipping );
 	}
 }

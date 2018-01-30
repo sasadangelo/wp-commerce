@@ -2,8 +2,8 @@
 Contributors: automattic, woothemes, akeda, dwainm, royho, allendav, slash1andy, woosteve, spraveenitpro, mikedmoore, fernashes, shellbeezy, danieldudzic, mikaey, fullysupportedphil, dsmithweb, corsonr, bor0, zandyring
 Tags: ecommerce, e-commerce, commerce, woothemes, wordpress ecommerce, store, sales, sell, shop, shopping, cart, checkout, configurable, paypal
 Requires at least: 4.4
-Tested up to: 4.7
-Stable tag: 1.4.1
+Tested up to: 4.9.0
+Stable tag: 1.5.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -85,9 +85,47 @@ https://gist.github.com/mikejolley/ad2ecc286c9ad6cefbb7065ba6dfef48
 
 == Changelog ==
 
+= 1.5.0 =
+* Add   - PayPal credit is now available on checkout.
+* Fix   - WC 3.3 compatibility.
+* Add   - Ability to select existing / upload new image(s) for logo / header fields.
+* Fix   - Shipping address overriden when PayPal returns billing address.
+
+= 1.4.7 =
+* Fix   - Issue with missing paypal session information.
+* Fix   - Dependency error when using LibreSSL.
+* Fix   - Additional compatibility with shipping plugins
+* Fix   - Issue where deprecated `WC_Cart::get_cart_url` is being used.
+* Tweak - Makes admin notification dismissible.
+
+= 1.4.6 =
+* Fix   - Coupon related PayPal error 10413.
+
+= 1.4.5 =
+* Fix   - Title/Description fields in the settings should appear based on Enable PayPal Express Checkout.
+* Add   - Invoice Prefix now has the ability to be empty.
+* Fix   - Additional compatibility fixes for line items.
+* Fix   - PHP notice for Subscription id.
+
+= 1.4.4 =
+* Fix   - PayPal error (10431).
+* Fix   - PHP notices.
+
+= 1.4.3 =
+* Fix   - Refunds not working on authorize then captured transactions.
+* Fix   - Checkout on single product available before variations are chosen.
+* Fix   - Not Returning PayPal Transaction Fee.
+* Fix   - 10431 (Item Amount Invalid at Checkout) error with discounts.
+* Fix   - Phone not returned and "Require Phone Number" setting not working.
+
+= 1.4.2 =
+* Fix   - _paypal_status on Authorize transactions not updating to processing after capture.
+* Fix   - 10413 (The totals of the cart item amounts do not match order amounts) error with discounts.
+* Fix   - Shipping Address being required on Virtual products.
+
 = 1.4.1 =
 * Fix   - Properly calculate whether Billing phone is required or not.
-* Fix   - Set NOSHIPPING based on product shipping requiredness (e.g. virtual products do not need shipping, etc)
+* Fix   - Set NOSHIPPING based on product shipping requiredness (e.g. virtual products do not need shipping, etc).
 
 = 1.4.0 =
 * Tweak - Use shipping discount instead of tax when adjustment negative.

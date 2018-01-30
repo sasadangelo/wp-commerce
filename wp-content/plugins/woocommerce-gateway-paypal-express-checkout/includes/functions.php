@@ -10,7 +10,7 @@ function woo_pp_start_checkout() {
 	} catch( PayPal_API_Exception $e ) {
 		wc_add_notice( $e->getMessage(), 'error' );
 
-		$redirect_url = WC()->cart->get_cart_url();
+		$redirect_url = wc_get_cart_url();
 		$settings     = wc_gateway_ppec()->settings;
 		$client       = wc_gateway_ppec()->client;
 
@@ -66,6 +66,19 @@ function wc_gateway_ppec_log( $message ) {
 	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 		error_log( $message );
 	}
+}
+
+/**
+ * Whether PayPal credit is supported.
+ *
+ * @since 1.5.0
+ *
+ * @return bool Returns true if PayPal credit is supported
+ */
+function wc_gateway_ppec_is_credit_supported() {
+	$base = wc_get_base_location();
+
+	return 'US' === $base['country'];
 }
 
 /**
