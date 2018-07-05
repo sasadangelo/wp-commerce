@@ -23,16 +23,16 @@ define('WP_CACHE', true); // Added by W3 Total Cache
 
 // ** MySQL settings ** //
 /** The name of the database for WordPress */
-define( 'DB_NAME', 'mywebsite_db' );
+define( 'DB_NAME', 'dbo87jtbb8ija' );
 
 /** MySQL database username */
-define( 'DB_USER', 'root' );
+define( 'DB_USER', 'jvkqbzbyrgzpyi' );
 
 /** MySQL database password */
-define( 'DB_PASSWORD', 'root' );
+define( 'DB_PASSWORD', '419210eea216e975b4ff208b559d5e14c8467407bf88d5a7a865e33319843a06' );
 
 /** MySQL hostname */
-define( 'DB_HOST', 'localhost' );
+define( 'DB_HOST', 'ec2-54-217-218-80.eu-west-1.compute.amazonaws.com' );
 
 /** Database Charset to use in creating database tables. */
 define( 'DB_CHARSET', 'utf8' );
