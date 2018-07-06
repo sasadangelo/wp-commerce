@@ -1,5 +1,5 @@
 function cli_show_cookiebar(p) {
-	/* plugin version 1.5.3 */
+	/* plugin version 1.5.9 */
 	var Cookie = {
 		set: function(name,value,days) {
 			if (days) {
@@ -41,6 +41,7 @@ function cli_show_cookiebar(p) {
 		return;
 	}
 	var settings = JSON.parse(json_payload);
+
 
 	var cached_header = jQuery(settings.notify_div_id),
 		cached_showagain_tab = jQuery(settings.showagain_div_id),
@@ -87,7 +88,7 @@ function cli_show_cookiebar(p) {
 	}
 	else if ( settings.notify_position_vertical == "bottom" ) {
 		if ( settings.border_on ) {
-			hdr_args['border-top'] = '4px solid ' + l1hs(settings.border);
+			hdr_args['border-top'] = '2px solid ' + l1hs(settings.border);
 		}
 		hdr_args['position'] = 'fixed';
 		hdr_args['bottom'] = '0';
@@ -143,7 +144,36 @@ function cli_show_cookiebar(p) {
 			jQuery(this).css('background-color', settings.button_2_button_colour);
 		});
 	}
+        
+        
+        var main_link = jQuery('#cookie_action_close_header_reject');
+	main_link.css( 'color', settings.button_3_link_colour );
 	
+	if ( settings.button_3_as_button ) {
+		main_link.css('background-color', settings.button_3_button_colour);
+		
+		main_link.hover(function() {
+			jQuery(this).css('background-color', settings.button_3_button_hover);
+		},
+		function() {
+			jQuery(this).css('background-color', settings.button_3_button_colour);
+		});
+	}
+	var main_link = jQuery('#cookie_action_open_url_reject');
+	main_link.css( 'color', settings.button_3_link_colour );
+	
+	if ( settings.button_3_as_button ) {
+		main_link.css('background-color', settings.button_3_button_colour);
+		
+		main_link.hover(function() {
+			jQuery(this).css('background-color', settings.button_3_button_hover);
+		},
+		function() {
+			jQuery(this).css('background-color', settings.button_3_button_colour);
+		});
+	}
+	
+        
 	cached_showagain_tab.click(function(e) {	
 		e.preventDefault();
 		cached_showagain_tab.slideUp(settings.animate_speed_hide, function slideShow() {
@@ -160,9 +190,35 @@ function cli_show_cookiebar(p) {
 		e.preventDefault();
 		accept_close();
 	});
+        
+        jQuery("#cookie_action_close_header_reject").click(function(e) {
+		e.preventDefault();
+		reject_close();
+	});
 
 	function accept_close() {
 		Cookie.set(ACCEPT_COOKIE_NAME, 'yes', ACCEPT_COOKIE_EXPIRE);
+		
+		if (settings.notify_animate_hide) {
+			cached_header.slideUp(settings.animate_speed_hide);
+		}
+		else {
+			cached_header.hide();
+		}
+		cached_showagain_tab.slideDown(settings.animate_speed_show);
+                if (settings.accept_close_reload === true) {
+                    location.reload();
+		}
+		return false;
+	}
+        
+        function reject_close() {
+
+                for(var k in Cli_Data.nn_cookie_ids) {
+                    Cookie.erase(Cli_Data.nn_cookie_ids[k]);
+                }
+                
+		Cookie.set(ACCEPT_COOKIE_NAME, 'no', ACCEPT_COOKIE_EXPIRE);
 		
 		if (settings.notify_animate_hide) {
 			cached_header.slideUp(settings.animate_speed_hide);

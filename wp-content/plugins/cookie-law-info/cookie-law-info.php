@@ -1,16 +1,17 @@
 <?php
 /*
-Plugin Name: Cookie Law Info
-Plugin URI: http://wordpress.org/extend/plugins/cookie-law-info/description/
-Description: A simple way of 'implied consent' to show your website complies with the EU Cookie Law, which came into force on 26 May 2012.
-Author: Richard Ashby
-Author URI: http://cookielawinfo.com/
-Version: 1.5.3
+Plugin Name: GDPR Cookie Consent
+Plugin URI: https://wordpress.org/plugins/cookie-law-info/
+Description: A simple way of to show your website complies with the EU Cookie Law / GDPR.
+Author: webtoffee
+Author URI: https://www.webtoffee.com/product/gdpr-cookie-consent/
+Version: 1.5.9
 License: GPL2
+Text Domain: cookie-law-info
 */
 
 /*	
-	Copyright 2012  Richard Ashby  (email : wordpress@mediacreek.com)
+	Copyright 2018  Markwt
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as 
@@ -59,6 +60,7 @@ add_action( 'wp_footer', 'cookielawinfo_inject_cli_script' );
 add_shortcode( 'delete_cookies', 'cookielawinfo_delete_cookies_shortcode' );	// a shortcode [delete_cookies (text="Delete Cookies")]
 add_shortcode( 'cookie_audit', 'cookielawinfo_table_shortcode' );				// a shortcode [cookie_audit style="winter"]
 add_shortcode( 'cookie_accept', 'cookielawinfo_shortcode_accept_button' );		// a shortcode [cookie_accept (colour="red")]
+add_shortcode( 'cookie_reject', 'cookielawinfo_shortcode_reject_button' );		// a shortcode [cookie_reject (colour="red")]
 add_shortcode( 'cookie_link', 'cookielawinfo_shortcode_more_link' );			// a shortcode [cookie_link]
 add_shortcode( 'cookie_button', 'cookielawinfo_shortcode_main_button' );		// a shortcode [cookie_button]
 
@@ -85,10 +87,14 @@ add_action( 'manage_posts_custom_column',  'cookielawinfo_custom_columns' );
 add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'cookielawinfo_plugin_action_links' );
 function cookielawinfo_plugin_action_links( $links ) {
    $links[] = '<a href="'. get_admin_url(null, 'edit.php?post_type=cookielawinfo&page=cookie-law-info') .'">Settings</a>';
-   $links[] = '<a href="http://cookielawinfo.com/cookie-law-info-2-0/" target="_blank">Beta 2.0</a>';
+   $links[] = '<a href="https://www.webtoffee.com/product/gdpr-cookie-consent/" target="_blank">Go PRO</a>';
    return $links;
 }
 
+add_action( 'plugins_loaded', 'cli_load_textdomain');
+function cli_load_textdomain(){
+    load_plugin_textdomain( 'cookie-law-info', false, basename( dirname( __FILE__ ) ) . '/i18n' );
+}
 
 /** Register the uninstall function */
 function cookielawinfo_activate() {
@@ -104,17 +110,18 @@ function cookielawinfo_uninstall_plugin() {
 	delete_option( CLI_SETTINGS_FIELD );
 	
 	// Bye bye custom meta:
-	global $post;
 	$args = array('post_type' => 'cookielawinfo');
-	$cookies = new WP_Query( $args );
+	$posts = get_posts($args);
 	
-	if ( !$cookies->have_posts() ) {
+	if ( !$posts ) {
 		return;
 	}
 	
-	while ( $cookies->have_posts() ) : $cookies->the_post();
-		// Get custom fields:
-		$custom = get_post_custom( $post->ID );
+        if( $posts )
+    {
+            foreach( $posts as $post )
+            {
+                $custom = get_post_custom( $post->ID );
 		// Look for old values. If they exist, move them to new values then delete old values:
 		if ( isset ( $custom["cookie_type"][0] ) ) {
 			delete_post_meta( $post->ID, "cookie_type", $custom["cookie_type"][0] );
@@ -128,7 +135,9 @@ function cookielawinfo_uninstall_plugin() {
 		if ( isset ( $custom["_cli_cookie_duration"][0] ) ) {
 			delete_post_meta( $post->ID, "_cli_cookie_duration", $custom["_cli_cookie_duration"][0] );
 		}
-	endwhile;
+            }
+        }
+	
 }
 
 

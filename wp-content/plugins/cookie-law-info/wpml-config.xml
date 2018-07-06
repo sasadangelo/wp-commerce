@@ -6,6 +6,8 @@
             <key name="button_1_url" />
             <key name="button_2_text" />
             <key name="button_2_url" />
+            <key name="button_3_text" />
+            <key name="button_3_url" />
             <key name="showagain_text" />
     	</key>
 	</admin-texts>

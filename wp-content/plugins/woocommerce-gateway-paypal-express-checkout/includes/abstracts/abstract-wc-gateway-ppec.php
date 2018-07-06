@@ -15,7 +15,7 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 	public function __construct() {
 		$this->has_fields         = false;
 		$this->supports[]         = 'refunds';
-		$this->method_title       = __( 'PayPal Express Checkout', 'woocommerce-gateway-paypal-express-checkout' );
+		$this->method_title       = __( 'PayPal Checkout', 'woocommerce-gateway-paypal-express-checkout' );
 		$this->method_description = __( 'Allow customers to conveniently checkout directly with PayPal.', 'woocommerce-gateway-paypal-express-checkout' );
 
 		if ( empty( $_GET['woo-paypal-return'] ) ) {
@@ -65,11 +65,37 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 				$this->description  = $this->get_option( 'description' );
 			}
 		} else {
-			// Image upload.
-			wp_enqueue_media();
-
-			wp_enqueue_script( 'wc-gateway-ppec-settings', wc_gateway_ppec()->plugin_url . 'assets/js/wc-gateway-ppec-settings.js', array( 'jquery' ), wc_gateway_ppec()->version, true );
+			add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		}
+
+		add_filter( 'woocommerce_ajax_get_endpoint', array( $this, 'pass_return_args_to_ajax' ), 10, 2 );
+	}
+
+	/**
+	 * Pass woo return args to AJAX endpoint when the checkout updates from the frontend
+	 * so that the order button gets set correctly.
+	 *
+	 * @param  string $request Optional.
+	 * @return string
+	 */
+	public function pass_return_args_to_ajax( $request ) {
+		if ( isset( $_GET['woo-paypal-return'] ) ) {
+			$request .= '&woo-paypal-return=1';
+		}
+
+		return $request;
+	}
+
+	/**
+	 * Enqueues admin scripts.
+	 *
+	 * @since 1.5.2
+	 */
+	public function enqueue_scripts() {
+		// Image upload.
+		wp_enqueue_media();
+
+		wp_enqueue_script( 'wc-gateway-ppec-settings', wc_gateway_ppec()->plugin_url . 'assets/js/wc-gateway-ppec-settings.js', array( 'jquery' ), wc_gateway_ppec()->version, true );
 	}
 
 	/**
@@ -506,8 +532,7 @@ abstract class WC_Gateway_PPEC extends WC_Payment_Gateway {
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc">
-				<?php echo $this->get_tooltip_html( $data ); ?>
-				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?></label>
+				<label for="<?php echo esc_attr( $field_key ); ?>"><?php echo wp_kses_post( $data['title'] ); ?> <?php echo $this->get_tooltip_html( $data ); ?></label>
 			</th>
 
 			<td class="image-component-wrapper">

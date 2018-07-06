@@ -63,8 +63,11 @@ class CustomCSSandJS_Admin {
             'untrashed_post'            => 'trash_post',
             'wp_loaded'                 => 'compatibility_shortcoder',
             'wp_ajax_ccj_active_code'   => 'wp_ajax_ccj_active_code',
+            'wp_ajax_ccj_permalink'     => 'wp_ajax_ccj_permalink',
             'post_submitbox_start'      => 'post_submitbox_start',
             'restrict_manage_posts'     => 'restrict_manage_posts',
+            'edit_form_before_permalink' => 'edit_form_before_permalink',
+            'before_delete_post'        => 'before_delete_post',
         );
         foreach( $actions as $_key => $_value ) {
             add_action( $_key, array( $this, $_value ) );
@@ -150,7 +153,10 @@ class CustomCSSandJS_Admin {
               foreach($wp_scripts->registered as $_key => $_value) {
                 if (!isset($_value->src)) continue;
 
-                if (strstr($_value->src, 'wp-content/plugins') !== false && strstr($_value->src, 'plugins/custom-css-js/assets') === false) {
+                if (strstr($_value->src, 'wp-content/plugins') !== false 
+                    && strstr($_value->src, 'plugins/custom-css-js/assets') === false
+                    && strstr($_value->src, 'plugins/advanced-custom-fields/') === false
+                    && strstr($_value->src, 'plugins/advanced-custom-fields-pro/') === false) {
                   unset($wp_scripts->registered[$_key]);
                 }
               }
@@ -278,7 +284,7 @@ class CustomCSSandJS_Admin {
             'type'      => __('Type', 'custom-css-js'),
             'title'     => __('Title', 'custom-css-js'),
             'author'    => __('Author', 'custom-css-js'),
-            'date'      => __('Date', 'custom-css-js'),
+            'published' => __('Published', 'custom-css-js'),
             'modified'  => __('Modified', 'custom-css-js'),
         );
     }
@@ -294,23 +300,21 @@ class CustomCSSandJS_Admin {
             echo '<span class="language language-'.$options['language'].'">' . $options['language'] . '</span>';
         }
 
-        if ( $column == 'modified' ) {
-            if ( ! isset( $wp_version ) ) {
-                include( ABSPATH . WPINC . '/version.php' );
-            }
-
-            if ( version_compare( $wp_version, '4.6', '>=' ) ) {
-                $m_time = get_the_modified_time( 'G', $post_id );
+        if ( $column == 'modified' || $column == 'published' ) {
+            if ( $column == 'modified' ) {
+                $f_time = get_post_modified_time( __('Y/m/d g:i:s a'), true, $post_id );
+                $g_time = get_post_modified_time( 'G', true, $post_id );
             } else {
-                $m_time = get_the_modified_time( 'G', false, $post_id );
+                $f_time = get_post_time( __('Y/m/d g:i:s a' ), true );
+                $g_time = get_post_time( 'G', true );
             }
 
-            $time_diff = time() - $m_time;
+            $time_diff = time() - $g_time;
 
             if ( $time_diff > 0 && $time_diff < DAY_IN_SECONDS ) {
-                $h_time = sprintf( __( '%s ago' ), human_time_diff( $m_time ) );
+                $h_time = sprintf( __( '%s ago', 'custom-css-js-pro' ), human_time_diff( $g_time) );
             } else {
-                $h_time = mysql2date( __( 'Y/m/d' ), $m_time );
+                $h_time = mysql2date( get_option('date_format'), $f_time );
             }
 
             echo $h_time;
@@ -337,6 +341,7 @@ class CustomCSSandJS_Admin {
      */
     function manage_edit_posts_sortable_columns( $columns ) {
         $columns['modified'] = 'modified';
+        $columns['published'] = 'published';
         return $columns;
         
     }
@@ -560,6 +565,8 @@ class CustomCSSandJS_Admin {
      * Add the codemirror editor in the `post` screen
      */
     public function codemirror_editor( $post ) {
+
+
         $current_screen = get_current_screen();
 
         if ( $current_screen->post_type != 'custom-css-js' ) {
@@ -586,7 +593,8 @@ class CustomCSSandJS_Admin {
             $post->post_content = str_replace('&amp', htmlentities('&amp'), $post->post_content );
 
             // Then the rest of the entities
-            $entities = get_html_translation_table(HTML_ENTITIES, ENT_QUOTES | ENT_HTML5 );
+            $html_flags = defined('ENT_HTML5') ? ENT_QUOTES |  ENT_HTML5 : ENT_QUOTES; 
+            $entities = get_html_translation_table(HTML_ENTITIES, $html_flags);
             unset( $entities[ array_search('&amp;', $entities) ]);
             $regular_expression = str_replace(';', '', '/('.implode('|', $entities).')/i');
             preg_match_all($regular_expression, $post->post_content, $matches);
@@ -595,6 +603,10 @@ class CustomCSSandJS_Admin {
                     $post->post_content = str_replace($_entity, htmlentities($_entity), $post->post_content);
                 }
             }
+        }
+
+        if ( isset($settings['ccj_htmlentities2']) && $settings['ccj_htmlentities2'] == 1 ) {
+            $post->post_content = htmlentities( $post->post_content );
         }
 
         switch ( $language ) {
@@ -1047,6 +1059,12 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
             $file_name = $post_id . '.' . $options['language'];
             $file_content = $before . stripslashes($_POST['content']) . $after;
             @file_put_contents( CCJ_UPLOAD_DIR . '/' . $file_name , $file_content );
+
+            // save the file as the Permalink slug
+            $slug = get_post_meta( $post_id, '_slug', true );
+            if ( $slug ) {
+                @file_put_contents( CCJ_UPLOAD_DIR . '/' . $slug . '.' . $options['language'], $file_content );
+            }
         }
 
 
@@ -1282,7 +1300,89 @@ End of comment */ ', 'custom-css-js') . PHP_EOL . PHP_EOL;
     }
 
 
+    /**
+     * Show the Permalink edit form
+     */
+    function edit_form_before_permalink($filename = '', $permalink = '', $filetype = 'css') {
+        if ( isset($_GET['language'] ) ) $filetype = $_GET['language'];
 
+        if ( !is_string($filename) ) {
+            global $post;
+            if ( ! is_object( $post ) ) return;
+            if ( 'custom-css-js' !== $post->post_type ) return;
+
+            $post = $filename;
+            $slug = get_post_meta( $post->ID, '_slug', true );
+            $options = get_post_meta( $post->ID, 'options', true );
+            if ( isset($options['language'] ) ) $filetype = $options['language'];
+            if ( ! @file_exists( CCJ_UPLOAD_DIR . '/' . $slug . '.' . $options['language'] ) ) {
+                $slug = false;
+            }
+            $filename = ( $slug ) ? $slug : $post->ID;
+        }
+
+        if ( ! in_array( $filetype, array( 'css', 'js' ) ) ) return;
+        if ( empty( $permalink ) ) {
+            $permalink = CCJ_UPLOAD_URL. '/' . $filename . '.' . $filetype; 
+        }
+
+        ?>
+        <div class="inside">
+            <div id="edit-slug-box" class="hide-if-no-js">
+                <strong>Permalink:</strong>
+                <span id="sample-permalink"><a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html(CCJ_UPLOAD_URL ) . '/'; ?><span id="editable-post-name"><?php echo esc_html( $filename ); ?></span>.<?php echo esc_html($filetype); ?></a></span>
+                &lrm;<span id="ccj-edit-slug-buttons"><button type="button" class="ccj-edit-slug button button-small hide-if-no-js" aria-label="Edit permalink">Edit</button></span>
+                <span id="editable-post-name-full"><?php echo esc_html($filename); ?></span>
+            </div>
+            <?php wp_nonce_field( 'ccj-permalink', 'ccj-permalink-nonce' ); ?>
+        </div>
+        <?php
+    }
+
+
+    /**
+     * AJAX save the Permalink slug
+     */
+    function wp_ajax_ccj_permalink() {
+
+        if ( ! isset( $_POST['ccj_permalink_nonce'] ) ) return; 
+
+        if ( ! wp_verify_nonce( $_POST['ccj_permalink_nonce'], 'ccj-permalink') ) return; 
+
+        $code_id = isset($_POST['code_id'])? intval($_POST['code_id']) : 0;
+        $permalink = isset($_POST['permalink'])? $_POST['permalink'] : null;
+        $slug = isset($_POST['new_slug'])? trim(sanitize_file_name($_POST['new_slug'])) : null;
+        $filetype = isset($_POST['filetype'])? $_POST['filetype'] : 'css';
+        if ( empty($slug ) ) {
+            $slug = (string)$code_id;
+        } else {
+            update_post_meta( $code_id, '_slug', $slug);
+        }
+        $this->edit_form_before_permalink( $slug, $permalink, $filetype );
+
+        wp_die();
+    } 
+
+
+    /**
+     * Remove the JS/CSS file from the disk when deleting the post
+     */
+    function before_delete_post( $postid ) {
+        global $post;
+        if ( ! is_object( $post ) ) return;
+        if ( 'custom-css-js' !== $post->post_type ) return;
+        if ( ! wp_is_writable( CCJ_UPLOAD_DIR ) ) return; 
+
+        $options     = get_post_meta( $postid, 'options', true ); 
+        $slug        = get_post_meta( $postid, '_slug', true ); 
+        $file_name   = $postid . '.' . $options['language'];
+
+        @unlink( CCJ_UPLOAD_DIR . '/' . $file_name );
+
+        if ( !empty( $slug ) ) {
+            @unlink( CCJ_UPLOAD_DIR . '/' . $slug . '.' . $options['language'] );
+        }
+    }
 
 }
 

@@ -441,3 +441,61 @@ input.cmn-toggle-yes-no:checked + label:after {
 #wpgmza_store_locator_default_radius_mi.active {
     display: block;
 }
+
+#wpgmza-gdpr-compliance fieldset
+{
+	margin-bottom: 0.3em;
+}
+
+#wpgmza-gdpr-compliance fieldset>*
+{
+	display: inline-block;
+	vertical-align: top;
+}
+
+#wpgmza-gdpr-compliance fieldset>label
+{
+	width: 260px;
+}
+
+#wpgmza-gdpr-compliance input[type='number']
+{
+	width: 64px;
+}
+
+#wpgmza-gdpr-compliance textarea
+{
+	resize: both;
+}
+
+
+#wpgmza-gdpr-compliance label
+{
+	cursor: auto;
+}
+
+#wpgmza-gdpr-compliance i
+{
+	cursor: help !important;
+}
+
+[name='wpgmza_gdpr_default_notice']
+{
+	width: 80%;
+}
+
+[name='wpgmza_gdpr_default_notice']>p:first-child
+{
+	margin-top: 0px;
+}
+
+[name='wpgmza_gdpr_company_name'], [name='wpgmza_gdpr_retention_purpose']
+{
+	width: 50vw;
+}
+
+[name='wpgmza_gdpr_notice_override_text']
+{
+	width: 50vw;
+	height: 200px;
+}

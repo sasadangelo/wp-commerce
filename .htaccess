@@ -16,6 +16,9 @@
          Header unset Last-Modified
     </IfModule>
 </FilesMatch>
+<IfModule mod_headers.c>
+    Header set Referrer-Policy ""
+</IfModule>
 # END W3TC Browser Cache
 # BEGIN WordPress
 <IfModule mod_rewrite.c>

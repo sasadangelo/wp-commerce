@@ -1,6 +1,6 @@
 <?php
 /*
-Copyright 2012  Richard Ashby  (email : wordpress@mediacreek.com)
+Copyright 2018  Markwt
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License, version 2, as 
@@ -44,6 +44,10 @@ function cookielawinfo_get_json_settings() {
 		'button_2_button_hover'			=> (cookielawinfo_su_hex_shift( $settings['button_2_button_colour'], 'down', 20 )),
 		'button_2_link_colour'			=> $settings['button_2_link_colour'],
 		'button_2_as_button'			=> $settings['button_2_as_button'],
+                'button_3_button_colour'		=> $settings['button_3_button_colour'],
+		'button_3_button_hover'			=> (cookielawinfo_su_hex_shift( $settings['button_3_button_colour'], 'down', 20 )),
+		'button_3_link_colour'			=> $settings['button_3_link_colour'],
+		'button_3_as_button'			=> $settings['button_3_as_button'],
 		'font_family'					=> $settings['font_family'],
 		'header_fix'                    => $settings['header_fix'],
 		'notify_animate_hide'			=> $settings['notify_animate_hide'],
@@ -53,6 +57,7 @@ function cookielawinfo_get_json_settings() {
 		'notify_position_vertical'		=> $settings['notify_position_vertical'],
 		'scroll_close'                  => $settings['scroll_close'],
 		'scroll_close_reload'           => $settings['scroll_close_reload'],
+		'accept_close_reload'           => $settings['accept_close_reload'],            
 		'showagain_tab'					=> $settings['showagain_tab'],
 		'showagain_background'			=> $settings['showagain_background'],
 		'showagain_border'				=> $settings['showagain_border'],
@@ -127,16 +132,50 @@ function cookielawinfo_enqueue_frontend_scripts() {
 		/**
 		 * Force reload
 		 */
-		$version = '1.5.3';
+		$version = '1.5.9';
 		
 		wp_register_style( 'cookielawinfo-style', CLI_PLUGIN_URL . 'css/cli-style.css', null, $version );
 		wp_enqueue_style( 'cookielawinfo-style' );
 		
+                $non_necessary_cookie_ids = get_non_necessary_cookie_ids();
+                
+                $cli_cookie_datas = array(
+                    'nn_cookie_ids' => $non_necessary_cookie_ids,
+                    );
 		wp_enqueue_script( 'cookie-law-info-script', CLI_PLUGIN_URL . 'js/cookielawinfo.js', array( 'jquery' ), $version );
+                wp_localize_script( 'cookie-law-info-script', 'Cli_Data', $cli_cookie_datas );
 	}
 	wp_register_style( 'cookielawinfo-table-style', CLI_PLUGIN_URL . 'css/cli-tables.css', null, $version );
 }
 
+
+function get_non_necessary_cookie_ids() {
+    global $wpdb;
+
+    $args = array(
+        'post_type' => 'cookielawinfo',
+        'meta_query' => array(
+            array(
+                'key' => '_cli_cookie_sensitivity',
+                'value' => 'non-necessary'
+            )
+        )
+    );
+    $posts = get_posts($args);
+
+    if (!$posts) {
+        return;
+    }
+    $cookie_slugs = array();
+
+    if ($posts) {
+        foreach ($posts as $post) {
+            $cookie_slugs[] = get_post_meta($post->ID, "_cli_cookie_slugid", true);
+        }
+    }
+
+    return $cookie_slugs;
+}
 
 /**
  * Color shift a hex value by a specific percentage factor
@@ -283,6 +322,46 @@ function cookielawinfo_debug_admin_settings( $break ) {
 	}
 	$ret .= '</p>';
 	return $ret;
+}
+
+
+/* Print scripts or data in the head tag on the front end. */
+add_action('wp_head', 'include_admin_hdrscript_addedin_cookielawinfo');
+function include_admin_hdrscript_addedin_cookielawinfo(){
+
+    if ( !isset( $_COOKIE['viewed_cookie_policy'] )) {
+        return;
+    }
+    
+    $third_party_cookie_options = get_option('cookielawinfo_thirdparty_settings');
+    if(!is_admin())
+    {
+       
+       if(!empty($third_party_cookie_options)){
+           if($third_party_cookie_options['thirdparty_on_field'] == 'true' && $_COOKIE['viewed_cookie_policy'] == 'yes'){
+               echo $third_party_cookie_options['thirdparty_head_section'];
+           }
+           
+       }
+       
+    }
+}
+
+/* Prints scripts or data before the closing body tag on the front end */
+add_action('wp_footer', 'include_admin_bodyscript_addedin_cookielawinfo');
+function include_admin_bodyscript_addedin_cookielawinfo(){
+
+   $third_party_cookie_options = get_option('cookielawinfo_thirdparty_settings');
+   if(!is_admin())
+   {
+       if(!empty($third_party_cookie_options)){
+           if($third_party_cookie_options['thirdparty_on_field'] == 'true' && $_COOKIE['viewed_cookie_policy'] == 'yes'){
+               echo $third_party_cookie_options['thirdparty_body_section'];
+           }
+           
+       }
+       
+   }
 }
 
 ?>

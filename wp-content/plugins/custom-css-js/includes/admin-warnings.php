@@ -13,6 +13,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class CustomCSSandJS_Warnings {
 
+    private $allowed_actions = array(
+        'ccj_dismiss_qtranslate',
+    );
+
     /**
      * Constructor
      */
@@ -40,7 +44,6 @@ class CustomCSSandJS_Warnings {
         $qtranslate_post_type_excluded = get_option('qtranslate_post_type_excluded');
 
         if ( ! is_array( $qtranslate_post_type_excluded ) || array_search( 'custom-css-js', $qtranslate_post_type_excluded ) === false ) { 
-            var_dump( $qtranslate_post_type_excluded );
             add_action( 'admin_notices', array( $this, 'check_qtranslate_notice' ) );
             return;
         }
@@ -53,8 +56,9 @@ class CustomCSSandJS_Warnings {
         $id = 'ccj_dismiss_qtranslate';
         $class = 'notice notice-warning is-dismissible';
         $message = sprintf(__( 'Please remove the <b>custom-css-js</b> post type from the <b>qTranslate settings</b> in order to avoid some malfunctions in the Simple Custom CSS & JS plugin. Check out <a href="%s" target="_blank">this screenshot</a> for more details on how to do that.', 'custom-css-js'), 'https://www.silkypress.com/wp-content/uploads/2016/08/ccj_qtranslate_compatibility.png' );
+        $nonce =  wp_create_nonce( $id );
 
-        printf( '<div class="%1$s" id="%2$s"><p>%3$s</p></div>', $class, $id, $message );
+        printf( '<div class="%1$s" id="%2$s" data-nonce="%3$s"><p>%4$s</p></div>', $class, $id, $nonce, $message );
 
         $this->dismiss_js( $id );
 
@@ -71,6 +75,7 @@ class CustomCSSandJS_Warnings {
             var data = {
                 action: 'ccj_dismiss',
                 option: '<?php echo $slug; ?>',
+                nonce: $(this).parent().data('nonce'),
             };
             $.post(ajaxurl, data, function(response ) {
                 $('#<?php echo $slug; ?>').fadeOut('slow');
@@ -88,6 +93,12 @@ class CustomCSSandJS_Warnings {
     function notice_dismiss() {
 
         $option = $_POST['option'];
+
+        if ( ! in_array($option, $this->allowed_actions ) ) {
+            return;
+        }
+
+        check_ajax_referer( $option, 'nonce' );
 
         update_option( $option, 1 );
 

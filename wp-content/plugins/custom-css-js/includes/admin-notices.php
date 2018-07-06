@@ -172,10 +172,10 @@ class CustomCSSandJS_Notices {
             <script type='text/javascript'>
                 jQuery(function($){
                     $(document).on( 'click', '.<?php echo $p; ?>_notice .dismiss_notice', function() {
-
                         var data = {
                             action: '<?php echo $p; ?>_notice_dismiss',
-                            option: '<?php echo $option_name; ?>'
+                            option: '<?php echo $option_name; ?>',
+                            nonce: $(this).parent().parent().data('nonce'),
                         };
                         $.post(ajaxurl, data, function(response ) {
                             $('#<?php echo $p; ?>_notice').fadeOut('slow');
@@ -184,7 +184,7 @@ class CustomCSSandJS_Notices {
                 });
             </script>
 
-                <div id="<?php echo $p; ?>_notice" class="updated notice <?php echo $p; ?>_notice is-dismissible">
+                <div id="<?php echo $p; ?>_notice" class="updated notice <?php echo $p; ?>_notice is-dismissible" data-nonce="<?php echo wp_create_nonce( $this->prefix .'_notice'); ?>">
             <p><?php echo $message ?></p>
             <button type="button" class="notice-dismiss">
             <span class="screen-reader-text"><?php _e('Dismiss this notice'); ?></span>
@@ -210,6 +210,8 @@ class CustomCSSandJS_Notices {
      */
     function notice_dismiss() {
         $p = $this->prefix;
+
+        check_ajax_referer( $p . '_notice', 'nonce' );
 
         update_option( $p.'_dismiss_notice', 1 );
 

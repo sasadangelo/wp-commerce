@@ -63,7 +63,10 @@ function wpgmza_b_pro_add_polyline($mid) {
                                 <input id=\"poly_thickness\" name=\"poly_thickness\" type=\"text\" value=\"4\" /> (0 - 50) example: 4
                             </td>
                                 
-                    </tr>
+						</tr>
+						
+						
+						
                     </table>
                     <div class='wpgmza_map_seventy'> 
                         <div id=\"wpgmza_map\">&nbsp;</div>
@@ -154,8 +157,25 @@ function wpgmza_b_pro_edit_polyline($mid) {
                             <td>
                                 <input id=\"poly_thickness\" name=\"poly_thickness\" type=\"text\" value=\"".esc_attr($pol->linethickness)."\" /> (0 - 50) example: 4
                             </td>
-                                
-                    </tr>
+						</tr>
+					
+						<tr>
+							
+							<td>
+								".__('Show Polyline', 'wp-google-maps')."
+							</td>
+							<td>
+								<button id='fit-bounds-to-shape' 
+									class='button button-secondary' 
+									type='button' 
+									title='" . __('Fit map bounds to shape', 'wp-google-maps') . "'
+									data-fit-bounds-to-shape='poly'>
+									<i class='fas fa-eye'></i>
+								</button>
+							</td>
+						
+						</tr>
+						
                     </table>
                     <div class='wpgmza_map_seventy'> 
                         <div id=\"wpgmza_map\">&nbsp;</div>
@@ -227,19 +247,6 @@ function wpgmaps_b_admin_add_polyline_javascript($mapid) {
             $api_version_string = "v=3.exp&";
         }
         ?>
-        <?php if( get_option( 'wpgmza_google_maps_api_key' ) ){ ?>
-            <script type="text/javascript">
-                var gmapsJsHost = (("https:" == document.location.protocol) ? "https://" : "http://");
-                var wpgmza_api_key = '<?php echo get_option( 'wpgmza_google_maps_api_key' ); ?>';
-                document.write(unescape("%3Cscript src='" + gmapsJsHost + "maps.google.com/maps/api/js?<?php echo $api_version_string; ?>key="+wpgmza_api_key+"' type='text/javascript'%3E%3C/script%3E"));
-            </script>
-        <?php } else { ?>
-            <script type="text/javascript">
-                var wpgmza_temp_api_key = "<?php echo get_option('wpgmza_temp_api'); ?>";
-                var gmapsJsHost = (("https:" == document.location.protocol) ? "https://" : "http://");
-                document.write(unescape("%3Cscript src='" + gmapsJsHost + "maps.google.com/maps/api/js?<?php echo $api_version_string; ?>key="+wpgmza_temp_api_key+"&libraries=places' type='text/javascript'%3E%3C/script%3E"));
-            </script>
-        <?php } ?>
         <link rel='stylesheet' id='wpgooglemaps-css'  href='<?php echo wpgmaps_get_plugin_url(); ?>/css/wpgmza_style.css' type='text/css' media='all' />
         <script type="text/javascript" >
             jQuery(document).ready(function(){
@@ -456,28 +463,7 @@ function wpgmaps_b_admin_edit_polyline_javascript($mapid,$polyid) {
         if (!$fillopacity) { $fillopacity = "0.5"; }
         $linecolor = "#".$linecolor;
                         
-        
-        if (isset($wpgmza_settings['wpgmza_api_version']) && $wpgmza_settings['wpgmza_api_version'] != "") {
-            $api_version_string = "v=".$wpgmza_settings['wpgmza_api_version']."&";
-        } else {
-            $api_version_string = "v=3.exp&";
-        }
-        
-
         ?>
-        <?php if( get_option( 'wpgmza_google_maps_api_key' ) ){ ?>
-            <script type="text/javascript">
-                var gmapsJsHost = (("https:" == document.location.protocol) ? "https://" : "http://");
-                var wpgmza_api_key = '<?php echo get_option( 'wpgmza_google_maps_api_key' ); ?>';
-                document.write(unescape("%3Cscript src='" + gmapsJsHost + "maps.google.com/maps/api/js?<?php echo $api_version_string; ?>key="+wpgmza_api_key+"' type='text/javascript'%3E%3C/script%3E"));
-            </script>
-        <?php } else { ?>
-            <script type="text/javascript">
-                var wpgmza_temp_api_key = "<?php echo get_option('wpgmza_temp_api'); ?>";
-                var gmapsJsHost = (("https:" == document.location.protocol) ? "https://" : "http://");
-                document.write(unescape("%3Cscript src='" + gmapsJsHost + "maps.google.com/maps/api/js?<?php echo $api_version_string; ?>key="+wpgmza_temp_api_key+"&libraries=places' type='text/javascript'%3E%3C/script%3E"));
-            </script>
-        <?php } ?>
         <link rel='stylesheet' id='wpgooglemaps-css'  href='<?php echo wpgmaps_get_plugin_url(); ?>/css/wpgmza_style.css' type='text/css' media='all' />
         <script type="text/javascript" >
              // polygons variables
@@ -597,6 +583,9 @@ function wpgmaps_b_admin_edit_polyline_javascript($mapid,$polyid) {
 
                 addPolyline();
                 
+				setTimeout(function() {
+					$("#fit-bounds-to-shape").click();
+				}, 500);
 
             }
             function addPolyline() {

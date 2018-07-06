@@ -34,7 +34,6 @@
  */
 .inline.hide-if-no-js{ display: none; }
 .view-switch { display: none; }
-#modified { width: 140px; }
 #type.manage-column { width: 50px; }
 .language { 
     background: #0c73b8;
@@ -56,6 +55,15 @@
 .column-active .dashicons { font-size: 17px; }
 .column-active a, .column-active a:active, .column-active a:hover, .column-active a:focus { display: block; outline: 0; border: 0; text-decoration: none; }
 #active.manage-column { width: 30px; }
+th.column-published, th.column-modified {
+    width: 15%;
+}
+@media screen and (max-width:782px){
+    .wp-list-table tr:not(.inline-edit-row):not(.no-items) td:not(.check-column) { display: table-cell !important; }
+    .wp-list-table tr:not(.inline-edit-row):not(.no-items) td:not(.check-column)::before { display: none !important; }
+    .wp-list-table .toggle-row { display: none !important; }
+}
+
 
 
 /**

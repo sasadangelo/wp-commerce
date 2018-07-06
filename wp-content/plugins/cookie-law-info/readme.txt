@@ -1,18 +1,27 @@
-=== Plugin Name ===
-Contributors: richardashby
-Donate link: http://cookielawinfo.com/donate
-Tags: eu cookie law, cookie law, eu privacy directive, privacy directive, cookies, privacy, compliance
+=== GDPR Cookie Consent ===
+Contributors: webtoffee,markwt
+Donate link: 
+Tags: eu cookie law, GDPR, cookie law, cookie consent, eu privacy directive, privacy directive, cookies, privacy, compliance
 Requires at least: 3.3.1
-Tested up to: 4.2.2
-Stable tag: 1.5.3
+Tested up to: 4.9.6
+Stable tag: 1.5.9
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A simple way to show how your website complies with the EU Cookie Law. Implied Consent. Style it to match your own website.
+A simple way to get GDPR Cookie Consent as per EU GDPR/Cookie Law regulations. Style it to match your own website.
 
 == Description ==
 
-This plugin uses implied consent, adding a subtle banner to your website either in the header or footer so you can show your compliance status regarding the new EU Cookie Law.
+NOTE: INSTALLING THIS PLUGIN ALONE DOES NOT MAKE YOUR SITE GDPR COMPLIANT. SINCE EACH SITE USES DIFFERENT COOKIES, YOU MAY NEED TO ENSURE YOU HAVE NECESSARY CONFIGURATIONS IN PLACE.
+
+Our plugin will help you to become GDPR compliant with following features. 
+
+- Plugin will show a notice with Accept and Reject options. By default the cookie value will be set to 'null'. If the user clicks 'Accept' button the value will be changed to 'yes'. IF the user clicks on 'Reject' the value will be set to 'no'. Your developer can check this value to set a cookie
+
+- Admin can add cookie details from the backend. The list of cookies can be displayed in your cookie policy page by using a short code
+
+
+This plugin adds a subtle banner to your website either in the header or footer so you can show your compliance status regarding the new EU Cookie Law.
 
 
 You can fully customise the style so it fits in with your existing website- change the colours, fonts, styles, the position on the page and even how it behaves when you click "accept".
@@ -25,11 +34,6 @@ It also has a Cookie Audit module so you can easily show what cookies your site 
 
 
 This plugin supports WPML and qTranslate so your translation needs are covered.
-
-
-Inline with official ICO guidelines and current industry best practice, this plugin uses 'implied consent' to aid you in showing your compliance status. This is a deliberate design choice that does not proactively block cookies: it doesn't make your visitors take action before they can use your website, and will not interfere with blog comments and [Google] Analytics. This approach is aimed at reducing website visitor dropout and maintaining your vital analytics data.
-
-For a demo, [check out the EU Cookie Law website](http://cookielawinfo.com/ "Demo the EU Cookie Law plugin"), including the table of cookies on the Privacy Policy page.
 
 
 Features:
@@ -46,6 +50,27 @@ Features:
 
 [Read more about the EU Cookie Law](http://cookielawinfo.com/ "More information about the EU Cookie Law")
 
+<blockquote>
+
+= GDPR Cookie Consent Premium Version Features =
+<ul>
+	<li>Manage list of cookies ( Name, CookieID, Description, Duration, Type, Category, Header Script, Footer Script)</li>
+	<li>Manage Cookie Categories</li>
+	<li>Allow to display Cookie Settings popup where site visitors can opt-in or give consent to Cookie Categories</li>
+	<li>Fully customisable to look just like your own website’s style: customise the colours, styles and fonts</li>
+	<li>Put the cookie bar in either the header or the footer</li>
+	<li>(Optional) accept cookie policy if the user scrolls</li>
+	<li>(Optional) automatically close the cookie bar after a delay (delay is configurable)</li>
+	<li>(Optional) cookie bar can be permanently dismissed or accessible through a “show again” tab</li>
+	<li>(Optional) “show again” tab is fully customisable including position shown on page and styles</li>
+	<li>“Cookie Audit” shortcode to construct a nicely-styled ‘Privacy & Cookie Policy’</li>
+	<li>WPML compatible</li>
+	<li>qTranslate support</li>
+</ul>
+
+For complete list of features and details, Please visit <a rel="nofollow" href="https://www.webtoffee.com/product/gdpr-cookie-consent/">GDPR Cookie Consent Premium Plugin</a> for more details
+
+</blockquote>
 
 == Installation ==
 
@@ -114,17 +139,17 @@ This plugin will:
 3. Neatly display a list of these cookies (via a shortcode). You can put this list on your Privacy & Cookie Policy page, for example.
 
 = Does this plugin block all cookies? =
-No, and neither does any other WordPress plugin - be aware that despite what you may believe, it is not currently technically possible to completely block all cookies on your WordPress website without first updating all plugins that use cookies in some way. That is beyond the scope of any single plugin.
-A more realistic approach for WordPress website owners is to use what is called "implied consent". This should not be a message buried on your website rather something more prominent that is clear to your visitors. This plugin can be used to highlight your compliance status and use of cookies in this way.
+No. This plugin restricts cookies by optionally loading the scripts. For this you have to add all cookies using the add cookie feature. It is not currently technically possible to completely block all cookies on your WordPress website without first updating all plugins that use cookies in some way. That is beyond the scope of any single plugin.
+A more realistic approach for WordPress website owners is to move the scripts that place cookies( for eg Google Analytics tracking code) to the GDPR Cookie Consent plugin and then allow visitors to control it by giving consent.
 
 
 = Do visitors now have to accept/refuse cookies in order to use websites? =
-In short, no, although there is a great deal of ambiguity around this law. What the law really gets at is privacy, not just cookies. The UK government, Google and many other major websites use "implied consent" on their own websites, which is the same technique used by this plugin. Further reading: http://cookielawinfo.com/cookie-law-101/
+No. Only the 'necessary' cookies will be loaded till the user gives consent. 
 
 = Does this plugin stop cookies from being stored? =
-No. Quite intentionally, this plugin will not do that. We have no way of knowing what plugins you use or how they work, so blocking/deleting cookies on a WordPress website/blog would possibly/probably break your site. Larger websites with huge budgets may well invest in such technology, but this plugin aims to help you provide a certain level of compliance without taking drastic action. If you do want blocking/deleting cookie functionality then (for now *) this is not the right plugin for you.
+We provide you the facility to add cookies and the corresponding scripts (This works if the cookies are placed when a script is added to the site header or footer as in the case of Google analytics, Hotjar etc..). In our premium version, visitors can reject the category of cookies they don't want to get installed. In such cases all cookies in that category will be blocked for the user. In the free version you can still block the scripts but doesn't have category level granularity.
 
-(*) Depending upon demand, this feature might be included in a future release.
+But if another plugin adds scripts or places a cookie then we do not have any control. We have no way of knowing what plugins you use or how they work, so blocking/deleting cookies on a WordPress website/blog would possibly/probably break your site. Larger websites with huge budgets may well invest in such technology, but this plugin aims to help you provide a certain level of compliance without taking drastic action. 
 
 = Does this plugin guarantee that I comply with this law? =
 No.
@@ -140,6 +165,29 @@ See http://cookielawinfo.com for more information on what is required.
 4. Header (with custom styles)
 
 == Changelog ==
+
+= 1.5.9 =
+
+* Issue with the plugin interfering with breadcrumb fixed.
+
+= 1.5.8 =
+
+* Support for underline tag in the message bar.
+
+= 1.5.7 =
+* Danish translation added
+
+= 1.5.6 =
+* Changed Reject button colour for Open URL and Close Header options.
+* Padding for message header
+* Audit table mobile view compatible
+
+= 1.5.5 =
+* GDPR compliance updates.
+
+= 1.5.4 =
+* Tested OK with WordPress 4.9.5
+* GDPR compliance updates.
 
 = 1.5.3 =
 * Bug fix: Buttons now handle apostrophes correctly
@@ -225,11 +273,8 @@ See http://cookielawinfo.com for more information on what is required.
 
 == Upgrade Notice ==
 
-= 1.2 =
-Performance and compatibility upgrade
+= 1.5.9 =
 
-= 1.1.2 =
-Bugfix: namespaced function to cookielawinfo_enqueue_color_picker()
+* Issue with the plugin interfering with breadcrumb fixed.
 
-= 1.1 =
-Major upgrade with several new features including auto-hide cookie bar after (configurable) delay, responsive design plus some bug fixes and performance enhancements.
+

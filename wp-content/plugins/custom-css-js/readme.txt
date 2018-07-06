@@ -5,7 +5,7 @@ Email: diana@burduja.eu
 Tags: CSS, JS, javascript, custom CSS, custom JS, custom style, site css, add style, customize theme, custom code, external css, css3, style, styles, stylesheet, theme, editor, design, admin
 Requires at least: 3.0.1
 Tested up to: 4.9
-Stable tag: 3.13 
+Stable tag: 3.17 
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -93,7 +93,7 @@ Yes. You can upload an image to your Media Library, then refer to it by its dire
 Yes.
 
 = Who can publish/edit/delete Custom Codes? =
-By default only the Administrator will be able to publish/edit/delete Custom Codes. Check out [this article](https://www.silkypress.com/simple_custom_css_js/user-capabilities-simple-custom-css-js-plugin/) for more details on roles and user capabilities customizations.
+By default only the Administrator will be able to publish/edit/delete Custom Codes. On the plugin activation there is a role created called Web Designer. You can assign this role to a non-admin user in order to allow to publish/edit/delete Custom Codes. On the plugin's Settings page there is an option to remove this role. 
 
 = Compatibility with qTranslate X plugin =
 * If the [qTranslate X](https://wordpress.org/plugins/qtranslate-x/) plugin is adding some `[:]` or `[:en]` characters to your code, then you need to remove the `custom-css-js` post type from the qTranslate settings. Check out [this screenshot](https://www.silkypress.com/wp-content/uploads/2016/08/ccj_qtranslate_compatibility.png) on how to do that.
@@ -113,6 +113,28 @@ The URL for the linked Codes is built just like the URL for other media (from Me
 $. Add/Edit HTML 
 
 == Changelog ==
+
+= 3.17 =
+* 04/25/2018
+* Fix: add the add/edit/delete custom post capabilities to the admin and 'css_js_designer' roles on plugin activation
+
+= 3.16 =
+* 04/22/2018
+* Fix: "The link you followed has expired" on custom code save if the WP Quads Pro plugin is active
+* Fix: PHP warning for PHP 7.2
+* Change: add/remove the "Web Designer" role only on activating/deactivating the option in the Settings page
+
+= 3.15 =
+* 03/27/2018
+* Change: check the option name against an array of allowed values
+
+= 3.14 =
+* 02/04/2018
+* Feature: permalink slug for custom codes
+* Fix: set the footer scripts to a higher priority
+* Update the french translation
+* Fix: allow admin stylesheets from ACF plugin, otherwise it breaks the post.php page
+* Tweak: for post.php and post-new.php page show code's title in the page title
 
 = 3.13 =
 * 01/12/2018

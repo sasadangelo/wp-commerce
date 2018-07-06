@@ -1,5 +1,7 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin
  */
 
@@ -67,6 +69,9 @@ class WPSEO_Taxonomy {
 	 * @param stdClass|WP_Term $term Term to show the edit boxes for.
 	 */
 	public function term_metabox( $term ) {
+		$tab = new WPSEO_Help_Center_Template_Variables_Tab();
+		$tab->register_hooks();
+
 		$metabox = new WPSEO_Taxonomy_Metabox( $this->taxonomy, $term );
 		$metabox->display();
 	}
@@ -86,6 +91,8 @@ class WPSEO_Taxonomy {
 		$asset_manager = new WPSEO_Admin_Asset_Manager();
 		$asset_manager->enqueue_style( 'scoring' );
 
+		$tab = new WPSEO_Help_Center_Template_Variables_Tab();
+		$tab->enqueue_assets();
 
 		$tag_id = filter_input( INPUT_GET, 'tag_ID' );
 		if (
@@ -101,6 +108,14 @@ class WPSEO_Taxonomy {
 			$asset_manager->enqueue_script( 'term-scraper' );
 
 			wp_localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'term-scraper', 'wpseoTermScraperL10n', $this->localize_term_scraper_script() );
+			$yoast_components_l10n = new WPSEO_Admin_Asset_Yoast_Components_l10n();
+			$yoast_components_l10n->localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'term-scraper' );
+			/**
+			 * Remove the emoji script as it is incompatible with both React and any
+			 * contenteditable fields.
+			 */
+			remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+
 			wp_localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'replacevar-plugin', 'wpseoReplaceVarsL10n', $this->localize_replace_vars_script() );
 			wp_localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'metabox', 'wpseoSelect2Locale', WPSEO_Utils::get_language( WPSEO_Utils::get_user_locale() ) );
 			wp_localize_script( WPSEO_Admin_Asset_Manager::PREFIX . 'metabox', 'wpseoAdminL10n', WPSEO_Help_Center::get_translated_texts() );
@@ -213,7 +228,7 @@ class WPSEO_Taxonomy {
 		$taxonomy = get_taxonomy( $term->taxonomy );
 
 		$term_formatter = new WPSEO_Metabox_Formatter(
-			new WPSEO_Term_Metabox_Formatter( $taxonomy, $term, WPSEO_Options::get_option( 'wpseo_titles' ) )
+			new WPSEO_Term_Metabox_Formatter( $taxonomy, $term )
 		);
 
 		return $term_formatter->get_values();
@@ -224,9 +239,10 @@ class WPSEO_Taxonomy {
 	 */
 	public function localize_replace_vars_script() {
 		return array(
-			'no_parent_text' => __( '(no parent)', 'wordpress-seo' ),
-			'replace_vars'   => $this->get_replace_vars(),
-			'scope'          => $this->determine_scope(),
+			'no_parent_text'           => __( '(no parent)', 'wordpress-seo' ),
+			'replace_vars'             => $this->get_replace_vars(),
+			'recommended_replace_vars' => $this->get_recommended_replace_vars(),
+			'scope'                    => $this->determine_scope(),
 		);
 	}
 
@@ -275,10 +291,9 @@ class WPSEO_Taxonomy {
 	 * @return bool
 	 */
 	private function show_metabox() {
-		$options    = WPSEO_Options::get_option( 'wpseo_titles' );
-		$option_key = 'hideeditbox-tax-' . $this->taxonomy;
+		$option_key = 'display-metabox-tax-' . $this->taxonomy;
 
-		return ( empty( $options[ $option_key ] ) );
+		return WPSEO_Options::get( $option_key );
 	}
 
 	/**
@@ -293,7 +308,7 @@ class WPSEO_Taxonomy {
 	/**
 	 * Prepares the replace vars for localization.
 	 *
-	 * @return array replace vars.
+	 * @return array The replacement variables.
 	 */
 	private function get_replace_vars() {
 		$term_id = filter_input( INPUT_GET, 'tag_ID' );
@@ -308,16 +323,12 @@ class WPSEO_Taxonomy {
 			'sitedesc',
 			'sep',
 			'page',
-			'currenttime',
-			'currentdate',
-			'currentday',
-			'currentmonth',
-			'currentyear',
 			'term_title',
 			'term_description',
 			'category_description',
 			'tag_description',
 			'searchphrase',
+			'currentyear',
 		);
 
 		foreach ( $vars_to_cache as $var ) {
@@ -325,6 +336,21 @@ class WPSEO_Taxonomy {
 		}
 
 		return $cached_replacement_vars;
+	}
+
+	/**
+	 * Prepares the recommended replace vars for localization.
+	 *
+	 * @return array The recommended replacement variables.
+	 */
+	private function get_recommended_replace_vars() {
+		$recommended_replace_vars = new WPSEO_Admin_Recommended_Replace_Vars();
+		$taxonomy                 = filter_input( INPUT_GET, 'taxonomy' );
+
+		// What is recommended depends on the current context.
+		$page_type = $recommended_replace_vars->determine_for_term( $taxonomy );
+
+		return $recommended_replace_vars->get_recommended_replacevars_for( $page_type );
 	}
 
 	/**
@@ -342,50 +368,4 @@ class WPSEO_Taxonomy {
 
 		add_action( "{$this->taxonomy}_term_edit_form_top", array( $this, 'custom_category_description_editor' ) );
 	}
-
-	/********************** DEPRECATED METHODS **********************/
-
-	// @codeCoverageIgnoreStart
-	/**
-	 * @deprecated 3.2
-	 *
-	 * Retrieves the title template.
-	 *
-	 * @param object $term Taxonomy term.
-	 *
-	 * @return string
-	 */
-	public static function get_title_template( $term ) {
-		_deprecated_function( __METHOD__, 'WPSEO 3.2', 'WPSEO_Term_Scraper::get_title_template' );
-
-		return '';
-	}
-
-	/**
-	 * @deprecated 3.2
-	 *
-	 * Retrieves the metadesc template.
-	 *
-	 * @param object $term Taxonomy term.
-	 *
-	 * @return string
-	 */
-	public static function get_metadesc_template( $term ) {
-		_deprecated_function( __METHOD__, 'WPSEO 3.2', 'WPSEO_Term_Scraper::get_metadesc_template' );
-
-		return '';
-	}
-
-	/**
-	 * @deprecated 3.2
-	 *
-	 * Translate options text strings for use in the select fields.
-	 *
-	 * {@internal IMPORTANT: if you want to add a new string (option) somewhere, make sure you add
-	 * that array key to the main options definition array in the class WPSEO_Taxonomy_Meta() as well!!!!}}
-	 */
-	public function translate_meta_options() {
-		_deprecated_function( __METHOD__, 'WPSEO 3.2', 'WPSEO_Taxonomy_Settings_Fields::translate_meta_options' );
-	}
-	// @codeCoverageIgnoreEnd
 }

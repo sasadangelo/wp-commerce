@@ -114,11 +114,20 @@ class WC_Gateway_PPEC_Checkout_Handler {
 	 * See also filter_billing_fields below.
 	 *
 	 * @since 1.2.1
+	 * @since 1.5.4 Check to make sure PPEC is even enable before continuing.
 	 * @param $fields array
 	 *
 	 * @return array
 	 */
 	public function filter_default_address_fields( $fields ) {
+		if ( 'yes' !== wc_gateway_ppec()->settings->enabled ) {
+			return $fields;
+		}
+
+		if ( ! apply_filters( 'woocommerce_paypal_express_checkout_address_not_required', ! WC_Gateway_PPEC_Plugin::needs_shipping() ) ) {
+			return $fields;
+		}
+
 		if ( method_exists( WC()->cart, 'needs_shipping' ) && ! WC()->cart->needs_shipping() ) {
 			$not_required_fields = array( 'address_1', 'city', 'postcode', 'country' );
 			foreach ( $not_required_fields as $not_required_field ) {
@@ -146,12 +155,16 @@ class WC_Gateway_PPEC_Checkout_Handler {
 	 * This is one of two places we need to filter fields. See also filter_default_address_fields above.
 	 *
 	 * @since 1.2.0
-	 * @version 1.2.1
+	 * @since 1.5.4 Check to make sure PPEC is even enable before continuing.
 	 * @param $billing_fields array
 	 *
 	 * @return array
 	 */
 	public function filter_billing_fields( $billing_fields ) {
+		if ( 'yes' !== wc_gateway_ppec()->settings->enabled ) {
+			return $billing_fields;
+		}
+
 		$require_phone_number = wc_gateway_ppec()->settings->require_phone_number;
 
 		if ( array_key_exists( 'billing_phone', $billing_fields ) ) {
@@ -403,7 +416,7 @@ class WC_Gateway_PPEC_Checkout_Handler {
 	}
 
 	/**
-	 * Checks data is correctly set when returning from PayPal Express Checkout
+	 * Checks data is correctly set when returning from PayPal Checkout
 	 */
 	public function maybe_return_from_paypal() {
 		if ( empty( $_GET['woo-paypal-return'] ) || empty( $_GET['token'] ) || empty( $_GET['PayerID'] ) ) {
@@ -640,7 +653,7 @@ class WC_Gateway_PPEC_Checkout_Handler {
 
 			WC()->session->paypal = new WC_Gateway_PPEC_Session_Data( $session_data_args );
 
-			return $settings->get_paypal_redirect_url( $response['TOKEN'], false, $session_data_args['use_paypal_credit'] );
+			return $settings->get_paypal_redirect_url( $response['TOKEN'], true, $session_data_args['use_paypal_credit'] );
 		} else {
 			throw new PayPal_API_Exception( $response );
 		}
@@ -701,6 +714,10 @@ class WC_Gateway_PPEC_Checkout_Handler {
 	 * @return bool Returns true if buyer checkout from checkout page
 	 */
 	public function is_started_from_checkout_page() {
+		if ( ! is_object( WC()->session ) ) {
+			return false;
+		}
+
 		$session = WC()->session->get( 'paypal' );
 
 		return (

@@ -1,9 +1,9 @@
 === WP Google Maps ===
-Contributors: WPGMaps, NickDuncan, CodeCabin_, DylanAuty
+Contributors: WPGMaps, NickDuncan, CodeCabin_, DylanAuty, PerryRylance
 Donate link: http://www.wpgmaps.com
 Tags: google maps, maps, map, map markers, google map, google maps plugin, wp google maps, wp google map, map plugin, directions, google map plugin, map widget
 Requires at least: 3.5
-Tested up to: 4.9.1
+Tested up to: 4.9.6
 Stable tag: trunk
 License: GPLv2
 
@@ -32,14 +32,14 @@ The [WP Google Maps Pro Version](http://www.wpgmaps.com/purchase-professional-ve
 * Full screen map functionality
 * Support for localization
 * Choose from four Google maps types: roadmap, terrain, satellite and hybrid
-* Define your own width, height and zoom level for your Google Map
+* Define your own width, height and zoom level for your map
 * Add animations to your map markers!
 * Store locator functionality
 * Restrict a store locator search by country
 * Add Polygons to your Map
 * Add Polylines / Routes to your map
 * Create a map in less than a 30 seconds!
-* Right click to add a marker to your Google map
+* Right click to add a marker to your map
 * No advertising or links
 * Google Maps Autocomplete
 * Google Maps Transport Layer
@@ -47,28 +47,29 @@ The [WP Google Maps Pro Version](http://www.wpgmaps.com/purchase-professional-ve
 * Serve your map marker data via your database or an XML file
 * Compatible with caching plugins
 * Compatible with Cloudfare
-* Latest Google Maps API (V3.23, V3.24 & V3.exp)
+* Latest Google Maps API
+* Latest OpenLayers API
 
 = Professional Edition =
-* Create multiple Google maps!
+* Create multiple maps!
 * Allow your visitors to get directions to your markers.
 * Add descriptions, links and images to your map markers.
 * Add categories to your map markers
 * Filter markers by category
-* Mashup multiple Google maps
+* Mashup multiple maps
 * Add different marker icons, or your own icons to make your map really stand out!
-* List your Google Map markers in the four ways; basic list, basic table, carousel, advanced table
+* List your map markers in the four ways; basic list, basic table, carousel, advanced table
 * Allow visitors to use their map location as the starting or ending point for the directions
 * Choose between the Default Google Maps Infowindow and the new Modern Infowindow
 * Export/Import your markers to a CSV file for quick editing.
 * Link Fusion tables to your Google Maps
 * Show your visitor's location on the Map
-* Import KML/KMZ files to your Google Map
+* Import KML/KMZ files to your map
 * More advanced options for the Store Locator
 * Allow users to use their map location for the store locator
 * Store locator search by category
 * Hide all map markers until a store locator search is done
-* Move your marker list inside the Google Map window
+* Move your marker list inside the map window
 * Multiple map widget functionality
 * Add retina-ready map marker icons
 * WordPress Network friendly
@@ -214,8 +215,134 @@ Please upgrade your version of WP Google Maps to version 6.0.27 as it includes m
 
 == Changelog ==
 
-= 6.4.09 - 2018-01-15 - Medium priority =
-* Removed the plugin deactivation survey as there are PHP compatibility issues. Will have to retest and add this back at a later stage.
+= 7.10.20 :- 2018-07-05 :- Low priority =
+* Added hook for new GDPR tab content
+* Added JavaScript for VGM GDPR controls
+* Fixed WPGMZA\DOMDocument::saveInnerBody not saving text nodes
+
+= 7.10.19 - 2018-07-05 :- Medium Priority =
+* Added new event "userlocationfound" dispatched from WPGMZA.events
+* Added fall back to convert UTF-8 to HTML entities on installations without multibyte functions available
+* Changed GDPR settings UI, removed redundant compliance setting, added default notice
+* Fixed media="1" attribute not validating
+* Fixed nominatim geocoder not giving expected response to callback
+* Fixed ScriptLoader module always enqueuing FontAwesome 4.*
+* Fixed debug code breaking WP Migrate DB integration
+* Fixed custom fields blank in marker listing
+* Replaced deprecated MySQL functions with ST_ functions
+* Replaced deprecated jQuery(window).load functions
+* Removed Google autocomplete when using OpenLayers
+* Removed protocol from marker icons / fixed marker icons disappear after switching to https://
+
+= 7.10.18 - 2018-07-02 :- Medium Priority =
+* Fixed GDPR back end warning appearing when GDPR compliance is enabled
+
+= 7.10.17 - 2018-06-29 :- Medium Priority =
+* Fixed country restriction broken in store locator
+* Added dismissable admin GDPR warning when GDPR compliance has been switched off
+* Fixed GDPR settings blank by default on some installations
+
+= 7.10.16 - 2018-06-21 :- Medium priority =
+* Fixed global settings lost
+* Fixed whitespace matched in version variable
+
+= 7.10.15 - 2018-06-14 :- Medium priority =
+* Fixed GDPR consent notice bypassed when "prevent other plugins and theme enqueueing maps API" is not set
+
+= 7.10.14 - 2018-06-14 :- Medium priority =
+* Fixed incompatibilities with UGM
+
+= 7.10.13 - 2018-06-13 :- Low priority =
+* Fixed can't save Modern Store Locator
+* Fixed store locator reset not working
+* Fixed disabling map controls not working
+* Fixed store locator radio button
+
+= 7.10.12 - 2018-06-12 :- Low priority =
+* Handed FontAwesome loading over to ScriptLoader module
+* Deprecated global function wpgmza_enqueue_fontawesome
+* Fixed circles and rectangles only working on map ID 1
+ 
+= 7.10.11 - 2018-06-08 :- Low priority =
+* Fixed JS error when passing non-string value to document.write
+* Temporary workaround for "Unexpected token % in JSON"
+* API consent no longer required on back-end
+
+= 7.10.10 - 2018-06-01 :- Medium Priority =
+* Adding setting "Prevent other plugins and theme loading API"
+
+= 7.10.09 - 2018-06-01 :- Medium Priority =
+* Fixed unterminated comment warning
+* Fixed map edit page creating Google places autocomplete when engine is set to OpenLayers
+* Fixed icon not draggable in edit marker location page
+
+= 7.10.08 - 2018-05-31 :- Medium Priority =
+* Fixed cannot edit marker in Basic only
+
+= 7.10.07 - 2018-05-31 :- Medium Priority =
+* Fixed issue where map engine was different on back end
+
+= 7.10.06 - 2018-05-31 :- Medium Priority =
+* Added "require consent before API load" to GDPR settings
+
+= 7.10.05 - 2018-05-30  :- Low Priority =
+* Fixed Using $this when not in object context when using older PHP version
+* Fixed google sometimes not defined when selected engine is OpenLayers
+
+= 7.10.04 - 2018-05-30 :- Medium Priority =
+* Fixed geocode response coordinates not interpreted properly
+* Italian translation updated
+
+= 7.10.03 - 2018-05-30 :- High Priority =
+* Fixed InfoWindow not opening when max width set in
+* Fixed $this not in context inside closure when using older PHP versions
+* Fixed Gold add-on clustering settings blank
+* Altered map engine selection dialog
+ 
+= 7.10.02 - 2018-05-29 =
+* Engine defaults to Google Maps 
+
+= 7.10.01 - 2018-05-29 =
+* Fixed undefined index notice in GDPR module
+
+= 7.10.00 - 2018-05-25 =
+* Added new Javascript modules
+* Added new PHP modules
+* Class AutoLoading implemented
+* OpenLayers / OpenStreetMap integration
+* Fixed Edit Marker Position not working with Pro 6.*
+* Fixed some strings not being translated in German
+* JS Minification
+* Added "Developer mode"
+
+= 7.0.04 - 2018-05-07 =
+* Fixed PHP notice regarding store locator default radius
+
+= 7.0.03 - 2018-04-20 =
+* Improved spatial data migration function to be more robust
+* Fixed undefined index use_fontawesome
+
+= 7.0.02 - 2018-04-15 =
+* Added option to select FontAwesome version
+* Fixed bug with circle data array
+
+= 7.0.01 - 2018-04-11 - Medium Priority =
+* Switched to WebFont / CSS FontAwesome 5 for compatibility reasons
+* Fixed JS error in for ... in loop when adding methods to Array prototype
+* Fixed FontAwesome CSS being enqueued as script
+* Added functionality to fit map to bounds when editing shapes
+
+= 7.0.00 - 2018-04-04 =
+* Added arbitrary radii control to Maps -> Settings -> Store Locator
+* Added modern store locator look and feel
+* Added modern store locator radius
+* Added custom JS field in Maps -> Settings -> Advanced
+* Added spatial types to marker table
+* Added Google API Error handler and alert
+* Added code to display custom fields in infowindow when Pro is installed
+* Fresh install "My First Map" defaults to modern store locator and radius
+* Relaxed theme data parsing
+* Disabled Street View, zoom controls, pan controls and map type controls on fresh installs
 
 = 6.4.08 - 2018-01-14 - Medium priority =
 * Update Google Maps API versions to include 3.30 and 3.31

@@ -3,16 +3,16 @@
  * Plugin Name: Simple Custom CSS and JS 
  * Plugin URI: https://wordpress.org/plugins/custom-css-js/
  * Description: Easily add Custom CSS or JS to your website with an awesome editor.
- * Version: 3.13
- * Author: Diana Burduja
- * Author URI: https://www.silkypress.com/
+ * Version: 3.17
+ * Author: SilkyPress.com 
+ * Author URI: https://www.silkypress.com
  * License: GPL2
  *
  * Text Domain: custom-css-js 
  * Domain Path: /languages/
  *
  * WC requires at least: 2.3.0
- * WC tested up to: 3.2.0
+ * WC tested up to: 3.3.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -65,12 +65,15 @@ final class CustomCSSandJS {
      * @access public
      */
     public function __construct() {
-        add_action( 'init', array( $this, 'register_post_type' ) );
+
+        include_once( 'includes/admin-install.php' );
+        register_activation_hook(__FILE__, array('CustomCSSandJS_Install', 'install')); 
+        add_action( 'init', array( 'CustomCSSandJS_Install', 'register_post_type' ) );
+
         $this->set_constants();
 
         if ( is_admin() ) {
             $this->load_plugin_textdomain();
-            add_action('admin_init', array($this, 'create_roles'));
             include_once( 'includes/admin-screens.php' );
             include_once( 'includes/admin-config.php' );
             include_once( 'includes/admin-addons.php' );
@@ -107,7 +110,9 @@ final class CustomCSSandJS {
                 $action .= 'footer';
             }
 
-            add_action( $action, array( $this, 'print_' . $_key ) );
+            $priority = ( $action == 'wp_footer' ) ? 40 : 10;
+
+            add_action( $action, array( $this, 'print_' . $_key ), $priority );
         }
     }
 
@@ -197,7 +202,7 @@ final class CustomCSSandJS {
     function set_constants() {
         $dir = wp_upload_dir();
         $constants = array(
-            'CCJ_VERSION'         => '3.13',
+            'CCJ_VERSION'         => '3.17',
             'CCJ_UPLOAD_DIR'      => $dir['basedir'] . '/custom-css-js', 
             'CCJ_UPLOAD_URL'      => $dir['baseurl'] . '/custom-css-js', 
             'CCJ_PLUGIN_FILE'     => __FILE__,
@@ -209,160 +214,7 @@ final class CustomCSSandJS {
         }
     }
 
-
-    /**
-     * Create the custom-css-js post type
-     */
-    public function register_post_type() {
-        $labels = array(
-            'name'                   => _x( 'Custom Code', 'post type general name', 'custom-css-js'),
-            'singular_name'          => _x( 'Custom Code', 'post type singular name', 'custom-css-js'),
-            'menu_name'              => _x( 'Custom CSS & JS', 'admin menu', 'custom-css-js'),
-            'name_admin_bar'         => _x( 'Custom Code', 'add new on admin bar', 'custom-css-js'),
-            'add_new'                => _x( 'Add Custom Code', 'add new', 'custom-css-js'),
-            'add_new_item'           => __( 'Add Custom Code', 'custom-css-js'),
-            'new_item'               => __( 'New Custom Code', 'custom-css-js'),
-            'edit_item'              => __( 'Edit Custom Code', 'custom-css-js'),
-            'view_item'              => __( 'View Custom Code', 'custom-css-js'),
-            'all_items'              => __( 'All Custom Code', 'custom-css-js'),
-            'search_items'           => __( 'Search Custom Code', 'custom-css-js'),
-            'parent_item_colon'      => __( 'Parent Custom Code:', 'custom-css-js'),
-            'not_found'              => __( 'No Custom Code found.', 'custom-css-js'),
-            'not_found_in_trash'     => __( 'No Custom Code found in Trash.', 'custom-css-js')
-        );
-
-        $capability_type = 'custom_css';
-        $capabilities = array(
-            'edit_post'              => "edit_{$capability_type}",
-            'read_post'              => "read_{$capability_type}",
-            'delete_post'            => "delete_{$capability_type}",
-            'edit_posts'             => "edit_{$capability_type}s",
-            'edit_others_posts'      => "edit_others_{$capability_type}s",
-            'publish_posts'          => "publish_{$capability_type}s",
-            'read'                   => "read",
-            'delete_posts'           => "delete_{$capability_type}s",
-            'delete_published_posts' => "delete_published_{$capability_type}s",
-            'delete_others_posts'    => "delete_others_{$capability_type}s",
-            'edit_published_posts'   => "edit_published_{$capability_type}s",
-            'create_posts'           => "edit_{$capability_type}s",
-        );
-
-        $args = array(
-            'labels'                 => $labels,
-            'description'            => __( 'Custom CSS and JS code', 'custom-css-js' ),
-            'public'                 => false,
-            'publicly_queryable'     => false,
-            'show_ui'                => true,
-            'show_in_menu'           => true,
-            'menu_position'          => 100,
-            'menu_icon'              => 'dashicons-plus-alt',
-            'query_var'              => false,
-            'rewrite'                => array( 'slug' => 'custom-css-js' ),
-            'capability_type'        => $capability_type,
-            'capabilities'           => $capabilities, 
-            'has_archive'            => true,
-            'hierarchical'           => false,
-            'exclude_from_search'    => true,
-            'menu_position'          => null,
-            'can_export'             => false,
-            'supports'               => array( 'title' )
-        );
-
-        register_post_type( 'custom-css-js', $args );
-    }
-
-        
-    /**
-     * Create roles and capabilities.
-     */
-    function create_roles() {
-        global $wp_roles;
-
-
-        if ( !current_user_can('update_plugins') )
-            return;
-
-        if ( ! class_exists( 'WP_Roles' ) ) {
-            return;
-        }
-
-        if ( ! isset( $wp_roles ) ) {
-            $wp_roles = new WP_Roles();
-        }
-
-        if ( isset($wp_roles->roles['css_js_designer'])) 
-            return;
-
-        // Add Web Designer role
-        add_role( 'css_js_designer', __( 'Web Designer', 'custom-css-js'), array(
-            'level_9'                => true,
-            'level_8'                => true,
-            'level_7'                => true,
-            'level_6'                => true,
-            'level_5'                => true,
-            'level_4'                => true,
-            'level_3'                => true,
-            'level_2'                => true,
-            'level_1'                => true,
-            'level_0'                => true,
-            'read'                   => true,
-            'read_private_pages'     => true,
-            'read_private_posts'     => true,
-            'edit_users'             => true,
-            'edit_posts'             => true,
-            'edit_pages'             => true,
-            'edit_published_posts'   => true,
-            'edit_published_pages'   => true,
-            'edit_private_pages'     => true,
-            'edit_private_posts'     => true,
-            'edit_others_posts'      => true,
-            'edit_others_pages'      => true,
-            'publish_posts'          => true,
-            'publish_pages'          => true,
-            'delete_posts'           => true,
-            'delete_pages'           => true,
-            'delete_private_pages'   => true,
-            'delete_private_posts'   => true,
-            'delete_published_pages' => true,
-            'delete_published_posts' => true,
-            'delete_others_posts'    => true,
-            'delete_others_pages'    => true,
-            'manage_categories'      => true,
-            'moderate_comments'      => true,
-            'unfiltered_html'        => true,
-            'upload_files'           => true,
-        ) );
-
-        $capabilities = array();
-
-        $capability_types = array( 'custom_css' );
-
-        foreach ( $capability_types as $capability_type ) {
-
-            $capabilities[ $capability_type ] = array(
-                // Post type
-                "edit_{$capability_type}",
-                "read_{$capability_type}",
-                "delete_{$capability_type}",
-                "edit_{$capability_type}s",
-                "edit_others_{$capability_type}s",
-                "publish_{$capability_type}s",
-                "delete_{$capability_type}s",
-                "delete_published_{$capability_type}s",
-                "delete_others_{$capability_type}s",
-                "edit_published_{$capability_type}s",
-            );
-        }
-
-        foreach ( $capabilities as $cap_group ) {
-            foreach ( $cap_group as $cap ) {
-                $wp_roles->add_cap( 'css_js_designer', $cap );
-                $wp_roles->add_cap( 'administrator', $cap );
-            }
-        }
-    }
-
-
+       
 	public function load_plugin_textdomain() {
 		load_plugin_textdomain( 'custom-css-js', false, plugin_basename( dirname( __FILE__ ) ) . '/languages' );
 	}
@@ -376,16 +228,19 @@ endif;
  *
  * @return CustomCSSandJS 
  */
+if ( ! function_exists('CustomCSSandJS' ) ) {
 function CustomCSSandJS() {
     return CustomCSSandJS::instance();
 }
 
 CustomCSSandJS();
+}
 
 
 /**
  * Plugin action link to Settings page
 */
+if ( ! function_exists('custom_css_js_plugin_action_links') ) {
 function custom_css_js_plugin_action_links( $links ) {
 
     $settings_link = '<a href="edit.php?post_type=custom-css-js">' .
@@ -395,5 +250,23 @@ function custom_css_js_plugin_action_links( $links ) {
     
 }
 add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'custom_css_js_plugin_action_links' );
+}
 
+
+
+/**
+ * Compatibility with the WP Quads Pro plugin, 
+ * otherwise on a Custom Code save there is a 
+ * "The link you followed has expired." page shown.
+ */
+if ( ! function_exists('custom_css_js_quads_pro_compat') ) {
+    function custom_css_js_quads_pro_compat( $post_types ) {
+        $match = array_search('custom-css-js', $post_types);
+        if ( $match ) {
+            unset($post_types[$match]);
+        }
+        return $post_types;
+    }
+    add_filter('quads_meta_box_post_types', 'custom_css_js_quads_pro_compat', 20); 
+}
 

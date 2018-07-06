@@ -2,7 +2,7 @@
 	border: 0;
 	font-size: 10pt;
 	margin: 0 auto;
-	padding: 5px 0;
+	padding: 16px 0;
 	position: absolute;
 	text-align: center;
 	width: 100%;
@@ -21,37 +21,36 @@
 }
 /** Buttons (http://papermashup.com/demos/css-buttons) */
 .cli-plugin-button, .cli-plugin-button:visited {
-	background: #222 url('../images/overlay.png') repeat-x;
 	display: inline-block;
-	padding: 5px 10px 6px;
+	padding: 8px 16px 8px;
 	color: #fff;
 	text-decoration: none;
-	-moz-border-radius: 6px;
-	-webkit-border-radius: 6px;
-	-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.6);
-	-webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.6);
-	text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
-	border-bottom: 1px solid rgba(0,0,0,0.25);
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
 	position: relative;
 	cursor: pointer;
-	margin: auto 10px;
+	margin-left: 10px;
+	text-decoration: none;
 }
 .cli-plugin-button:hover {
 	background-color: #111;
 	color: #fff;
+	text-decoration: none;
 }
 .cli-plugin-button:active {
 	top: 1px;
 }
+.cli-plugin-main-link {
+    margin-left: 10px;
+}	
 .small.cli-plugin-button, .small.cli-plugin-button:visited {
 	font-size: 11px;
 }
 .cli-plugin-button, .cli-plugin-button:visited,
 	.medium.cli-plugin-button, .medium.cli-plugin-button:visited {
 	font-size: 13px;
-	font-weight: bold;
-	line-height: 1;
-	text-shadow: 0 -1px 1px rgba(0,0,0,0.25);
+    font-weight: 500;
+    line-height: 1;
 }
 .large.cli-plugin-button, .large.cli-plugin-button:visited {
 	font-size: 14px;

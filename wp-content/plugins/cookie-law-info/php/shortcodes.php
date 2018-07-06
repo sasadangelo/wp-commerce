@@ -2,7 +2,7 @@
 /*
 	===============================================================================
 
-	Copyright 2012  Richard Ashby  (email : wordpress@mediacreek.com)
+	Copyright 2018  Markwt
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as 
@@ -70,7 +70,6 @@ function cookielawinfo_table_shortcode( $atts ) {
 		'not_shown_message' => ''
 	), $atts ) );
 	
-	global $post;
 	
 	$args = array(
 		'post_type' => 'cookielawinfo',
@@ -79,33 +78,46 @@ function cookielawinfo_table_shortcode( $atts ) {
 		'order' => 'ASC',
 		'orderby' => 'title'
 	);
-	$cookies = new WP_Query( $args );
+	$posts = get_posts($args);
 	
 	$ret = '<table class="cookielawinfo-' . $style . '"><thead><tr>';
-	$ret .= '<th class="cookielawinfo-column-1">Cookie</th>';
-	$ret .= '<th class="cookielawinfo-column-2">Type</th>';
-	$ret .= '<th class="cookielawinfo-column-3">Duration</th>';
-	$ret .= '<th class="cookielawinfo-column-4">Description</th></tr>';
+	$ret .= '<th class="cookielawinfo-column-1">';
+	$ret .= __('Cookie','cookie-law-info');
+	$ret .= '</th>';
+	$ret .= '<th class="cookielawinfo-column-2">';
+	$ret .= __('Type','cookie-law-info');
+	$ret .= '</th>';
+	$ret .= '<th class="cookielawinfo-column-3">';
+	$ret .= __('Duration','cookie-law-info');
+	$ret .= '</th>';
+	$ret .= '<th class="cookielawinfo-column-4">';
+	$ret .= __('Description','cookie-law-info');
+	$ret .= '</th></tr>';
 	$ret .= '</thead><tbody>';
 	
-	if ( !$cookies->have_posts() ) {
-		$ret .= '<tr class="cookielawinfo-row"><td colspan="2" class="cookielawinfo-column-empty">' . $not_shown_message . '</td></tr>';
+	if ( !$posts ) {
+		$ret .= '<tr class="cookielawinfo-row"><td colspan="4" class="cookielawinfo-column-empty">' . $not_shown_message . '</td></tr>';
 	}
-	
-	while ( $cookies->have_posts() ) : $cookies->the_post();
-		// Get custom fields:
+        if( $posts )
+	{
+		foreach( $posts as $post )
+			{
 		$custom = get_post_custom( $post->ID );
 		$cookie_type = ( isset ( $custom["_cli_cookie_type"][0] ) ) ? $custom["_cli_cookie_type"][0] : '';
 		$cookie_duration = ( isset ( $custom["_cli_cookie_duration"][0] ) ) ? $custom["_cli_cookie_duration"][0] : '';
 		// Output HTML:
-		$ret .= '<tr class="cookielawinfo-row"><td class="cookielawinfo-column-1">' . get_the_title() . '</td>';
+		$ret .= '<tr class="cookielawinfo-row"><td class="cookielawinfo-column-1">' . $post->post_title . '</td>';
 		$ret .= '<td class="cookielawinfo-column-2">' . $cookie_type .'</td>';
 		$ret .= '<td class="cookielawinfo-column-3">' . $cookie_duration .'</td>';
-		$ret .= '<td class="cookielawinfo-column-4">' . get_the_content() .'</td>';
+		$ret .= '<td class="cookielawinfo-column-4">' . $post->post_content .'</td>';
+		$ret = apply_filters('cli_new_column_values_to_audit_table',$ret, $custom);
 		$ret .= '</tr>';
-	endwhile;
+
+		}
+	}
 	$ret .= '</tbody></table>';
 	return $ret;
+	
 }
 
 
@@ -125,6 +137,51 @@ function cookielawinfo_shortcode_accept_button( $atts ) {
 	return '<a href="#" id="cookie_action_close_header" class="medium cli-plugin-button ' . $colour . '">' . stripslashes( $settings['button_1_text'] ) . '</a>';
 }
 
+/** Returns HTML for a standard (green, medium sized) 'Accept' button */
+function cookielawinfo_shortcode_reject_button( $atts ) {
+//	extract( shortcode_atts( array(
+//		'colour' => 'green'
+//	), $atts ) );
+//
+//	// Fixing button translate text bug
+//	// 18/05/2015 by RA
+//	$defaults = array(
+//		'button_3_text' => 'Reject'
+//	);
+//        
+//	$settings = wp_parse_args( cookielawinfo_get_admin_settings(), $defaults );
+//      return '<a href="#" id="cookie_action_close_header_reject" class="medium cli-plugin-button ' . $colour . '">' . stripslashes( $settings['button_3_text'] ) . '</a>';
+    
+        $defaults = array( 
+                'button_3_text' => 'Reject',
+                'button_3_url' => '#',
+                'button_3_action' => '#cookie_action_close_header_reject',
+                'button_3_link_colour' => '#fff',
+                'button_3_new_win' => false,
+                'button_3_as_button' => true,
+                'button_3_button_colour' => '#000',
+                'button_3_button_size' => 'medium',
+            );
+        $settings = wp_parse_args( cookielawinfo_get_admin_settings(), $defaults );
+        
+        $classr = '';
+        if ( $settings['button_3_as_button'] ) {
+		$classr .= ' class="' . $settings['button_3_button_size'] . ' cli-plugin-button cli-plugin-main-button"';
+	}
+	else {
+		$classr .= ' class="cli-plugin-main-button" ' ;
+	}
+            
+        $url_reject = ( $settings['button_3_action'] == "cookie_action_open_url_reject" ) ? $settings['button_3_url'] : "#";
+        
+        $link_tag = '';
+        $link_tag .= '<a href="' . $url_reject . '" id="' . cookielawinfo_remove_hash ( $settings['button_3_action'] ) . '" ';
+	$link_tag .= ( $settings['button_3_new_win'] ) ? 'target="_blank" ' : '' ;
+	$link_tag .= $classr . ' >' . stripslashes( $settings['button_3_text'] ) . '</a>';	
+    return $link_tag;
+
+}
+
 
 /** Returns HTML for a generic button */
 function cookielawinfo_shortcode_more_link( $atts ) {
@@ -138,13 +195,22 @@ function cookielawinfo_shortcode_main_button( $atts ) {
 		'button_1_text' => 'Accept',
 		'button_1_url' => '#',
 		'button_1_action' => '#cookie_action_close_header',
-		
 		'button_1_link_colour' => '#fff',
 		'button_1_new_win' => false,
 		'button_1_as_button' => true,
 		'button_1_button_colour' => '0f0',
-		'button_1_button_size' => 'medium'
-	);
+		'button_1_button_size' => 'medium',
+            
+                'button_3_text' => 'Reject',
+                'button_3_url' => '#',
+                'button_3_action' => '#cookie_action_close_header_reject',
+                'button_3_link_colour' => '#fff',
+                'button_3_new_win' => false,
+                'button_3_as_button' => true,
+                'button_3_button_colour' => '#000',
+                'button_3_button_size' => 'medium',
+            );
+        //echo '<pre>'; print_r(cookielawinfo_get_admin_settings());exit;
 	$settings = wp_parse_args( cookielawinfo_get_admin_settings(), $defaults );
 	
 	$class = '';
@@ -157,10 +223,30 @@ function cookielawinfo_shortcode_main_button( $atts ) {
 	
 	// If is action not URL then don't use URL!
 	$url = ( $settings['button_1_action'] == "CONSTANT_OPEN_URL" ) ? $settings['button_1_url'] : "#";
+        
 	
 	$link_tag = '<a href="' . $url . '" id="' . cookielawinfo_remove_hash ( $settings['button_1_action'] ) . '" ';
 	$link_tag .= ( $settings['button_1_new_win'] ) ? 'target="_blank" ' : '' ;
 	$link_tag .= $class . ' >' . stripslashes( $settings['button_1_text'] ) . '</a>';
+        
+        // introduced reject on or off
+        if($settings['is_reject_on'] ){
+            
+        $classr = '';
+        if ( $settings['button_3_as_button'] ) {
+		$classr .= ' class="' . $settings['button_3_button_size'] . ' cli-plugin-button cli-plugin-main-button"';
+	}
+	else {
+		$classr .= ' class="cli-plugin-main-button" ' ;
+	}
+            
+        $url_reject = ( $settings['button_3_action'] == "cookie_action_open_url_reject" ) ? $settings['button_3_url'] : "#";
+        
+        
+        $link_tag .= '<a href="' . $url_reject . '" id="' . cookielawinfo_remove_hash ( $settings['button_3_action'] ) . '" ';
+	$link_tag .= ( $settings['button_3_new_win'] ) ? 'target="_blank" ' : '' ;
+	$link_tag .= $classr . ' >' . stripslashes( $settings['button_3_text'] ) . '</a>';
+        }
 	
 	return $link_tag;
 }
